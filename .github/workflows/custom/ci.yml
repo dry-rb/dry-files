@@ -1,0 +1,6 @@
+jobs:
+  tests:
+    strategy:
+      matrix:
+        ruby:
+          - "3.0"
