@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.license       = 'MIT'
   spec.version       = Dry::Files::VERSION.dup
 
-  spec.summary       = "this is a gem that is used for files purposes only - do not install it, do not use it"
+  spec.summary       = "file utilities"
   spec.description   = spec.summary
   spec.homepage      = 'https://dry-rb.org/gems/dry-files'
   spec.files         = Dir["CHANGELOG.md", "LICENSE", "README.md", "dry-files.gemspec", "lib/**/*"]
@@ -29,4 +29,6 @@ Gem::Specification.new do |spec|
 
   # to update dependencies edit project.yml
   spec.add_development_dependency "rake", "~> 13.0"
+  spec.add_development_dependency "rspec", "~> 3.10"
+  spec.add_development_dependency "rubocop", "~> 1.12"
 end
