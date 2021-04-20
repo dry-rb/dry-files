@@ -2,6 +2,7 @@
 
 module Dry
   class Files
-    VERSION = "0.1.0"
+    class Error < StandardError
+    end
   end
 end
