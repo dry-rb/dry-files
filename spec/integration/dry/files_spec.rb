@@ -171,21 +171,114 @@ RSpec.describe Dry::Files do
       expect { subject.cp(source, destination) }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::IOError)
         expect(exception.cause).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception.message).to include(source.to_s)
       end
     end
   end
 
   describe "#join" do
+    it "joins a single entry" do
+      path = "path"
+      expect(subject.join(path)).to eq(path)
+
+      path = Pathname.new(path)
+      expect(subject.join(path)).to eq(path.to_s)
+    end
+
+    it "joins multiple entries" do
+      path = %w[path to file]
+      expected = path.join(File::SEPARATOR)
+
+      expect(subject.join(path)).to eq(expected)
+
+      path = path.map { |p| Pathname.new(p) }
+      expect(subject.join(path)).to eq(expected)
+    end
   end
 
   describe "#expand_path" do
+    it "expands path from current directory" do
+      path = "expand-path"
+
+      begin
+        subject.touch(path)
+
+        expect(subject.expand_path(path)).to eq(File.join(Dir.pwd, path))
+      ensure
+        FileUtils.rm_rf(path)
+      end
+    end
+
+    it "expands path from current directory in combination with chdir" do
+      path = root.join("expand-path", "dir", "file")
+      subject.touch(path)
+
+      subject.chdir(root.join("expand-path", "dir")) do
+        expect(subject.expand_path("file")).to eq(path.realpath.to_s)
+      end
+    end
+
+    it "expands path from given directory" do
+      dir = root.join("expand-path", "given-dir")
+      path = dir.join("file")
+      subject.touch(path)
+
+      expect(subject.expand_path("file", dir)).to eq(path.realpath.to_s)
+    end
+
+    it "returns absolute path as it is" do
+      path = root.join("expand-path", "absolute")
+      subject.touch(path)
+
+      expect(subject.expand_path(path.realpath)).to eq(path.realpath.to_s)
+    end
   end
 
   describe "#pwd" do
+    it "returns current working directory" do
+      expect(subject.pwd).to eq(Dir.pwd)
+    end
+
+    it "returns current working directory in combination with Dir.chdir" do
+      Dir.chdir(root) do
+        expect(subject.pwd).to eq(root.to_s)
+      end
+    end
   end
 
   describe "#chdir" do
+    it "changes current working directory" do
+      current_directory = Dir.pwd
+      expect(subject.pwd).to eq(current_directory)
+
+      subject.chdir(root) do
+        expect(subject.pwd).to eq(root.to_s)
+        expect(Dir.pwd).to eq(root.to_s)
+      end
+
+      expect(subject.pwd).to eq(current_directory)
+    end
+
+    it "raises error if directory cannot be found" do
+      path = root.join("chdir-non-existing")
+
+      expect { subject.chdir(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+
+    it "raises error if argument is a file" do
+      path = root.join("chdir-file")
+      subject.touch(path)
+
+      expect { subject.chdir(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOTDIR)
+        expect(exception.message).to match(path.to_s)
+      end
+    end
   end
 
   describe "#mkdir" do
@@ -276,7 +369,7 @@ RSpec.describe Dry::Files do
       expect { subject.delete(path) }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::IOError)
         expect(exception.cause).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception.message).to include(path.to_s)
       end
     end
   end
@@ -296,7 +389,7 @@ RSpec.describe Dry::Files do
       expect { subject.delete_directory(path) }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::IOError)
         expect(exception.cause).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception.message).to include(path.to_s)
       end
     end
   end

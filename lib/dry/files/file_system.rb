@@ -39,8 +39,7 @@ module Dry
       #
       # @param path [String, Array<String>] the target path
       #
-      # @raise [Dry::Files::Error] if path is an existing directory
-      # @raise [Dry::Files::Error] in case of I/O error
+      # @raise [Dry::Files::IOError] in case of I/O error
       #
       # @since x.x.x
       # @api private
@@ -61,7 +60,7 @@ module Dry
       #
       # @param path [String, Array<String>] the target path
       #
-      # @raise [Dry::Files::Error] in case of I/O error
+      # @raise [Dry::Files::IOError] in case of I/O error
       #
       # @since x.x.x
       # @api private
@@ -77,6 +76,8 @@ module Dry
       #
       # @param path [String] the target file
       #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @since x.x.x
       # @api private
       def open(path, *args, &blk)
@@ -91,6 +92,8 @@ module Dry
       #
       # @param source [String] the file(s) or directory to copy
       # @param destination [String] the directory destination
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
       #
       # @since x.x.x
       # @api private
@@ -148,10 +151,14 @@ module Dry
       # @param path [String,Pathname] the target directory
       # @param blk [Proc] the code to execute with the target directory
       #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @since x.x.x
       # @api private
       def chdir(path, &blk)
-        file_utils.chdir(path, &blk)
+        with_error_handling do
+          file_utils.chdir(path, &blk)
+        end
       end
 
       # Creates a directory and all its parent directories.
@@ -163,6 +170,8 @@ module Dry
       # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-mkdir_p
       #
       # @param path [String] the directory to create
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
       #
       # @example
       #   require "dry/cli/utils/files/file_system"
@@ -189,6 +198,9 @@ module Dry
       #
       # @param path [String] the file that will be in the directories that
       #                      this method creates
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @example
       #   require "dry/cli/utils/files/file_system"
       #
@@ -211,6 +223,8 @@ module Dry
       #
       # @param path [String] the file to remove
       #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @since x.x.x
       # @api private
       def rm(path, **kwargs)
@@ -224,6 +238,8 @@ module Dry
       # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-remove_entry_secure
       #
       # @param path [String] the directory to remove
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
       #
       # @since x.x.x
       # @api private
@@ -239,6 +255,8 @@ module Dry
       # @see https://ruby-doc.org/core/IO.html#method-c-readlines
       #
       # @param path [String] the file to read
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
       #
       # @since x.x.x
       # @api private
@@ -286,6 +304,16 @@ module Dry
 
       private
 
+      # Catch `SystemCallError` and re-raise a `Dry::Files::IOError`.
+      #
+      # `SystemCallError` is parent for all the `Errno::*` Ruby exceptions.
+      # These class of exceptions are raised in case of I/O error.
+      #
+      # @see https://ruby-doc.org/core/SystemCallError.html
+      # @see https://ruby-doc.org/core/Errno.html
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @since x.x.x
       # @api private
       def with_error_handling

@@ -128,6 +128,8 @@ module Dry
     # @param path [String,Pathname] the target directory
     # @param blk [Proc] the code to execute with the target directory
     #
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
     # @since 0.1.0
     def chdir(path, &blk)
       adapter.chdir(path, &blk)
