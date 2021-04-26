@@ -39,14 +39,51 @@ module Dry
       #
       # @param path [String, Array<String>] the target path
       #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @since x.x.x
       # @api private
       def touch(path, **kwargs)
-        file_utils.touch(path, **kwargs)
+        raise IOError, Errno::EISDIR.new(path.to_s) if directory?(path)
+
+        with_error_handling do
+          file_utils.touch(path, **kwargs)
+        end
       end
 
-      def read(path)
-        file.read(path)
+      # Opens the file, optionally seeks to the given offset, then returns
+      # length bytes (defaulting to the rest of the file).
+      #
+      # Read ensures the file is closed before returning.
+      #
+      # @see https://ruby-doc.org/core/IO.html#method-c-read
+      #
+      # @param path [String, Array<String>] the target path
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
+      # @since x.x.x
+      # @api private
+      def read(path, *args, **kwargs)
+        with_error_handling do
+          file.read(path, *args, **kwargs)
+        end
+      end
+
+      # Opens (or creates) a new file for read/write operations.
+      #
+      # @see https://ruby-doc.org/core/File.html#method-c-open
+      #
+      # @param path [String] the target file
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
+      # @since x.x.x
+      # @api private
+      def open(path, *args, &blk)
+        with_error_handling do
+          file.open(path, *args, &blk)
+        end
       end
 
       # Copies file content from `source` to `destination`
@@ -56,10 +93,14 @@ module Dry
       # @param source [String] the file(s) or directory to copy
       # @param destination [String] the directory destination
       #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @since x.x.x
       # @api private
       def cp(source, destination, **kwargs)
-        file_utils.cp(source, destination, **kwargs)
+        with_error_handling do
+          file_utils.cp(source, destination, **kwargs)
+        end
       end
 
       # Returns a new string formed by joining the strings using Operating
@@ -110,10 +151,14 @@ module Dry
       # @param path [String,Pathname] the target directory
       # @param blk [Proc] the code to execute with the target directory
       #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @since x.x.x
       # @api private
       def chdir(path, &blk)
-        file_utils.chdir(path, &blk)
+        with_error_handling do
+          file_utils.chdir(path, &blk)
+        end
       end
 
       # Creates a directory and all its parent directories.
@@ -126,6 +171,8 @@ module Dry
       #
       # @param path [String] the directory to create
       #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @example
       #   require "dry/cli/utils/files/file_system"
       #
@@ -136,7 +183,9 @@ module Dry
       # @since x.x.x
       # @api private
       def mkdir(path, **kwargs)
-        file_utils.mkdir_p(path, **kwargs)
+        with_error_handling do
+          file_utils.mkdir_p(path, **kwargs)
+        end
       end
 
       # Creates a directory and all its parent directories.
@@ -149,6 +198,9 @@ module Dry
       #
       # @param path [String] the file that will be in the directories that
       #                      this method creates
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @example
       #   require "dry/cli/utils/files/file_system"
       #
@@ -171,10 +223,14 @@ module Dry
       #
       # @param path [String] the file to remove
       #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @since x.x.x
       # @api private
       def rm(path, **kwargs)
-        file_utils.rm(path, **kwargs)
+        with_error_handling do
+          file_utils.rm(path, **kwargs)
+        end
       end
 
       # Removes (deletes) a directory
@@ -183,10 +239,14 @@ module Dry
       #
       # @param path [String] the directory to remove
       #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @since x.x.x
       # @api private
       def rm_rf(path, *args)
-        file_utils.remove_entry_secure(path, *args)
+        with_error_handling do
+          file_utils.remove_entry_secure(path, *args)
+        end
       end
 
       # Reads the entire file specified by name as individual lines,
@@ -196,10 +256,14 @@ module Dry
       #
       # @param path [String] the file to read
       #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
       # @since x.x.x
       # @api private
       def readlines(path, *args)
-        file.readlines(path, *args)
+        with_error_handling do
+          file.readlines(path, *args)
+        end
       end
 
       # Check if the given file exist.
@@ -238,16 +302,24 @@ module Dry
         file.executable?(path)
       end
 
-      # Opens (or creates) a new file for read/write operations.
+      private
+
+      # Catch `SystemCallError` and re-raise a `Dry::Files::IOError`.
       #
-      # @see https://ruby-doc.org/core/File.html#method-c-open
+      # `SystemCallError` is parent for all the `Errno::*` Ruby exceptions.
+      # These class of exceptions are raised in case of I/O error.
       #
-      # @param path [String] the target file
+      # @see https://ruby-doc.org/core/SystemCallError.html
+      # @see https://ruby-doc.org/core/Errno.html
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
       #
       # @since x.x.x
       # @api private
-      def open(path, *args, &blk)
-        file.open(path, *args, &blk)
+      def with_error_handling
+        yield
+      rescue SystemCallError => e
+        raise IOError, e
       end
     end
   end

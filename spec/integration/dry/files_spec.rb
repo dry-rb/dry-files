@@ -36,6 +36,47 @@ RSpec.describe Dry::Files do
       expect(path).to exist
       expect(path).to have_content("foo")
     end
+
+    it "raises error if path is a directory" do
+      path = root.join("touch-directory")
+      path.mkpath
+
+      expect { subject.touch(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::EISDIR)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+  end
+
+  describe "#read" do
+    it "reads file" do
+      path = root.join("read")
+      subject.write(path, expected = "Hello#{newline}World")
+
+      expect(subject.read(path)).to eq(expected)
+    end
+
+    it "raises error when path is a directory" do
+      path = root.join("read-directory")
+      path.mkpath
+
+      expect { subject.read(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::EISDIR)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+
+    it "raises error when path doesn't exist" do
+      path = root.join("read-does-not-exist")
+
+      expect { subject.read(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
   end
 
   describe "#write" do
@@ -62,6 +103,24 @@ RSpec.describe Dry::Files do
 
       expect(path).to exist
       expect(path).to have_content("new words")
+    end
+
+    it "raises error when path isn't writeable" do
+      path = root.join("write-not-writeable")
+      path.mkpath
+      mode = path.stat.mode
+
+      begin
+        path.chmod(0o000)
+
+        expect { subject.write(path.join("file-not-writeable"), "content") }.to raise_error do |exception|
+          expect(exception).to be_kind_of(Dry::Files::IOError)
+          expect(exception.cause).to be_kind_of(Errno::EACCES)
+          expect(exception.message).to include(path.to_s)
+        end
+      ensure
+        path.chmod(mode)
+      end
     end
   end
 
@@ -104,6 +163,122 @@ RSpec.describe Dry::Files do
       expect(destination).to exist
       expect(destination).to have_content("the source")
     end
+
+    it "raises error when source cannot be found" do
+      source = root.join("missing-source")
+      destination = root.join("cp")
+
+      expect { subject.cp(source, destination) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(source.to_s)
+      end
+    end
+  end
+
+  describe "#join" do
+    it "joins a single entry" do
+      path = "path"
+      expect(subject.join(path)).to eq(path)
+
+      path = Pathname.new(path)
+      expect(subject.join(path)).to eq(path.to_s)
+    end
+
+    it "joins multiple entries" do
+      path = %w[path to file]
+      expected = path.join(File::SEPARATOR)
+
+      expect(subject.join(path)).to eq(expected)
+
+      path = path.map { |p| Pathname.new(p) }
+      expect(subject.join(path)).to eq(expected)
+    end
+  end
+
+  describe "#expand_path" do
+    it "expands path from current directory" do
+      path = "expand-path"
+
+      begin
+        subject.touch(path)
+
+        expect(subject.expand_path(path)).to eq(File.join(Dir.pwd, path))
+      ensure
+        FileUtils.rm_rf(path)
+      end
+    end
+
+    it "expands path from current directory in combination with chdir" do
+      path = root.join("expand-path", "dir", "file")
+      subject.touch(path)
+
+      subject.chdir(root.join("expand-path", "dir")) do
+        expect(subject.expand_path("file")).to eq(path.realpath.to_s)
+      end
+    end
+
+    it "expands path from given directory" do
+      dir = root.join("expand-path", "given-dir")
+      path = dir.join("file")
+      subject.touch(path)
+
+      expect(subject.expand_path("file", dir)).to eq(path.realpath.to_s)
+    end
+
+    it "returns absolute path as it is" do
+      path = root.join("expand-path", "absolute")
+      subject.touch(path)
+
+      expect(subject.expand_path(path.realpath)).to eq(path.realpath.to_s)
+    end
+  end
+
+  describe "#pwd" do
+    it "returns current working directory" do
+      expect(subject.pwd).to eq(Dir.pwd)
+    end
+
+    it "returns current working directory in combination with Dir.chdir" do
+      Dir.chdir(root) do
+        expect(subject.pwd).to eq(root.to_s)
+      end
+    end
+  end
+
+  describe "#chdir" do
+    it "changes current working directory" do
+      current_directory = Dir.pwd
+      expect(subject.pwd).to eq(current_directory)
+
+      subject.chdir(root) do
+        expect(subject.pwd).to eq(root.to_s)
+        expect(Dir.pwd).to eq(root.to_s)
+      end
+
+      expect(subject.pwd).to eq(current_directory)
+    end
+
+    it "raises error if directory cannot be found" do
+      path = root.join("chdir-non-existing")
+
+      expect { subject.chdir(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+
+    it "raises error if argument is a file" do
+      path = root.join("chdir-file")
+      subject.touch(path)
+
+      expect { subject.chdir(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOTDIR)
+        expect(exception.message).to match(path.to_s)
+      end
+    end
   end
 
   describe "#mkdir" do
@@ -119,6 +294,24 @@ RSpec.describe Dry::Files do
       subject.mkdir(path)
 
       expect(path).to be_directory
+    end
+
+    it "raises error when path isn't writeable" do
+      path = root.join("mkdir-not-writeable")
+      path.mkpath
+      mode = path.stat.mode
+
+      begin
+        path.chmod(0o000)
+
+        expect { subject.mkdir(path.join("dir-not-writeable")) }.to raise_error do |exception|
+          expect(exception).to be_kind_of(Dry::Files::IOError)
+          expect(exception.cause).to be_kind_of(Errno::EACCES)
+          expect(exception.message).to include(path.to_s)
+        end
+      ensure
+        path.chmod(mode)
+      end
     end
   end
 
@@ -140,6 +333,25 @@ RSpec.describe Dry::Files do
       expect(directory).to be_directory
       expect(path).to_not  exist
     end
+
+    it "raises error when path isn't writeable" do
+      parent = root.join("path")
+      parent.mkpath
+      mode = parent.stat.mode
+
+      begin
+        parent.chmod(0o000)
+        path = parent.join("to", "mkdir_p", "dir-not-writeable")
+
+        expect { subject.mkdir_p(path) }.to raise_error do |exception|
+          expect(exception).to be_kind_of(Dry::Files::IOError)
+          expect(exception.cause).to be_kind_of(Errno::EACCES)
+          expect(exception.message).to include(parent.to_s)
+        end
+      ensure
+        parent.chmod(mode)
+      end
+    end
   end
 
   describe "#delete" do
@@ -155,11 +367,10 @@ RSpec.describe Dry::Files do
       path = root.join("delete", "file")
 
       expect { subject.delete(path) }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
       end
-
-      expect(path).to_not exist
     end
   end
 
@@ -176,11 +387,10 @@ RSpec.describe Dry::Files do
       path = root.join("delete", "directory")
 
       expect { subject.delete_directory(path) }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
       end
-
-      expect(path).to_not exist
     end
   end
 
@@ -221,8 +431,9 @@ RSpec.describe Dry::Files do
       path = root.join("unshift_no_exist.rb")
 
       expect { subject.unshift(path, "# frozen_string_literal: true") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
       end
 
       expect(path).to_not exist
@@ -250,6 +461,9 @@ RSpec.describe Dry::Files do
       expect(path).to have_content(expected)
     end
 
+    # This gem was originally extracted from hanami-utils, into dry-cli,
+    # and finally into dry-files.
+    #
     # https://github.com/hanami/utils/issues/348
     it "adds a line at the bottom of a file that doesn't end with a newline" do
       path = root.join("append_missing_newline.rb")
@@ -270,8 +484,9 @@ RSpec.describe Dry::Files do
       path = root.join("append_no_exist.rb")
 
       expect { subject.append(path, "#{newline} Foo.register Append") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
       end
 
       expect(path).to_not exist
@@ -363,8 +578,8 @@ RSpec.describe Dry::Files do
       subject.write(path, content)
 
       expect { subject.replace_first_line(path, "not existing target", "  def self.call(input)") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(ArgumentError)
-        expect(exception.message).to eq("Cannot find `not existing target' inside `#{path}'.")
+        expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
+        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -374,8 +589,9 @@ RSpec.describe Dry::Files do
       path = root.join("replace_no_exist.rb")
 
       expect { subject.replace_first_line(path, "perform", "  def self.call(input)") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
       end
 
       expect(path).to_not exist
@@ -467,8 +683,8 @@ RSpec.describe Dry::Files do
       subject.write(path, content)
 
       expect { subject.replace_last_line(path, "not existing target", "  def self.call(input)") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(ArgumentError)
-        expect(exception.message).to eq("Cannot find `not existing target' inside `#{path}'.")
+        expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
+        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -478,8 +694,9 @@ RSpec.describe Dry::Files do
       path = root.join("replace_last_no_exist.rb")
 
       expect { subject.replace_last_line(path, "perform", "  def self.call(input)") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
       end
 
       expect(path).to_not exist
@@ -545,8 +762,8 @@ RSpec.describe Dry::Files do
       subject.write(path, content)
 
       expect { subject.inject_line_before(path, "not existing target", "  # It performs the operation") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(ArgumentError)
-        expect(exception.message).to eq("Cannot find `not existing target' inside `#{path}'.")
+        expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
+        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -556,8 +773,9 @@ RSpec.describe Dry::Files do
       path = root.join("inject_before_no_exist.rb")
 
       expect { subject.inject_line_before(path, "call", "  # It performs the operation") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
       end
 
       expect(path).to_not exist
@@ -633,8 +851,8 @@ RSpec.describe Dry::Files do
       subject.write(path, content)
 
       expect { subject.inject_line_before_last(path, "not existing target", "  # It performs the operation") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(ArgumentError)
-        expect(exception.message).to eq("Cannot find `not existing target' inside `#{path}'.")
+        expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
+        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -644,8 +862,9 @@ RSpec.describe Dry::Files do
       path = root.join("inject_before_last_no_exist.rb")
 
       expect { subject.inject_line_before_last(path, "call", "  # It performs the operation") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
       end
 
       expect(path).to_not exist
@@ -711,8 +930,8 @@ RSpec.describe Dry::Files do
       subject.write(path, content)
 
       expect { subject.inject_line_after(path, "not existing target", "    :result") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(ArgumentError)
-        expect(exception.message).to eq("Cannot find `not existing target' inside `#{path}'.")
+        expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
+        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -722,8 +941,9 @@ RSpec.describe Dry::Files do
       path = root.join("inject_after_no_exist.rb")
 
       expect { subject.inject_line_after(path, "call", "    :result") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
       end
 
       expect(path).to_not exist
@@ -799,8 +1019,8 @@ RSpec.describe Dry::Files do
       subject.write(path, content)
 
       expect { subject.inject_line_after_last(path, "not existing target", "    :result") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(ArgumentError)
-        expect(exception.message).to eq("Cannot find `not existing target' inside `#{path}'.")
+        expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
+        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -810,8 +1030,9 @@ RSpec.describe Dry::Files do
       path = root.join("inject_after_last_no_exist.rb")
 
       expect { subject.inject_line_after_last(path, "call", "    :result") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
       end
 
       expect(path).to_not exist
@@ -878,8 +1099,8 @@ RSpec.describe Dry::Files do
       subject.write(path, content)
 
       expect { subject.remove_line(path, "not existing target") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(ArgumentError)
-        expect(exception.message).to eq("Cannot find `not existing target' inside `#{path}'.")
+        expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
+        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -889,8 +1110,9 @@ RSpec.describe Dry::Files do
       path = root.join("remove_line_no_exist.rb")
 
       expect { subject.remove_line(path, "frozen") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
       end
 
       expect(path).to_not exist
@@ -1010,9 +1232,11 @@ RSpec.describe Dry::Files do
     it "raises error if file cannot be found" do
       path = root.join("inject_line_at_block_top_missing_file.rb")
 
-      expect {
-        subject.inject_line_at_block_top(path, "configure", "")
-      }.to raise_error(Errno::ENOENT)
+      expect { subject.inject_line_at_block_top(path, "configure", "") }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
+      end
     end
 
     it "raises error if Ruby block cannot be found" do
@@ -1025,9 +1249,10 @@ RSpec.describe Dry::Files do
 
       subject.write(path, content)
 
-      expect {
-        subject.inject_line_at_block_top(path, "configure", "")
-      }.to raise_error(ArgumentError, "Cannot find `configure' inside `#{path.realpath}'.")
+      expect { subject.inject_line_at_block_top(path, "configure", "") }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
+        expect(exception.message).to eq("Cannot find `configure' in `#{path.realpath}'")
+      end
     end
   end
 
@@ -1144,9 +1369,11 @@ RSpec.describe Dry::Files do
     it "raises error if file cannot be found" do
       path = root.join("inject_line_at_block_bottom_missing_file.rb")
 
-      expect {
-        subject.inject_line_at_block_bottom(path, "configure", "")
-      }.to raise_error(Errno::ENOENT)
+      expect { subject.inject_line_at_block_bottom(path, "configure", "") }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
+      end
     end
 
     it "raises error if Ruby block cannot be found" do
@@ -1159,9 +1386,10 @@ RSpec.describe Dry::Files do
 
       subject.write(path, content)
 
-      expect {
-        subject.inject_line_at_block_top(path, "configure", "")
-      }.to raise_error(ArgumentError, "Cannot find `configure' inside `#{path.realpath}'.")
+      expect { subject.inject_line_at_block_top(path, "configure", "") }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
+        expect(exception.message).to eq("Cannot find `configure' in `#{path.realpath}'")
+      end
     end
   end
 
@@ -1218,24 +1446,14 @@ RSpec.describe Dry::Files do
       expect(path).to have_content(expected)
     end
 
-    it "raises error if block cannot be found in path" do
+    it "raises an error when the file was not found" do
       path = root.join("remove_block_not_found.rb")
-      content = <<~CONTENT
-        class RemoveBlock
-          configure do
-            root __dir__
-          end
-        end
-      CONTENT
 
-      subject.write(path, content)
-
-      expect { subject.remove_block(path, "not existing target") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(ArgumentError)
-        expect(exception.message).to eq("Cannot find `not existing target' inside `#{path}'.")
+      expect { subject.remove_block(path, "configure") }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
       end
-
-      expect(path).to have_content(content)
     end
 
     it "raises error if block cannot be found" do
@@ -1251,40 +1469,31 @@ RSpec.describe Dry::Files do
       subject.write(path, content)
 
       expect { subject.remove_block(path, "not existing target") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(ArgumentError)
-        expect(exception.message).to eq("Cannot find `not existing target' inside `#{path}'.")
+        expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
+        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
-    end
-
-    it "raises an error when the file was not found" do
-      path = root.join("remove_block_not_found.rb")
-
-      expect { subject.remove_block(path, "configure") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to match("No such file or directory")
-      end
     end
   end
 
   describe "#exist?" do
     it "returns true for file" do
-      path = root.join("exist_file")
+      path = root.join("exist-file")
       subject.touch(path)
 
       expect(subject.exist?(path)).to be(true)
     end
 
     it "returns true for directory" do
-      path = root.join("exist_directory")
+      path = root.join("exist-dir")
       subject.mkdir(path)
 
       expect(subject.exist?(path)).to be(true)
     end
 
     it "returns false for non-existing file" do
-      path = root.join("exist_not_found")
+      path = root.join("exist-non-existing")
 
       expect(subject.exist?(path)).to be(false)
     end
@@ -1292,23 +1501,53 @@ RSpec.describe Dry::Files do
 
   describe "#directory?" do
     it "returns true for directory" do
-      path = root.join("directory_directory")
+      path = root.join("directory-dir")
       subject.mkdir(path)
 
       expect(subject.exist?(path)).to be(true)
     end
 
     it "returns false for file" do
-      path = root.join("directory_file")
+      path = root.join("directory-file")
       subject.touch(path)
 
       expect(subject.directory?(path)).to be(false)
     end
 
     it "returns false for non-existing path" do
-      path = root.join("directory_not_found")
+      path = root.join("directory-non-existing")
 
-      expect(subject.exist?(path)).to be(false)
+      expect(subject.directory?(path)).to be(false)
+    end
+  end
+
+  describe "#executable?" do
+    it "returns true when file is executable" do
+      path = root.join("executable-exec")
+      subject.touch(path)
+      path.chmod(0o744)
+
+      expect(subject.executable?(path)).to be(true)
+    end
+
+    it "returns false when file isn't executable" do
+      path = root.join("executable-non-exec")
+      subject.touch(path)
+
+      expect(subject.executable?(path)).to be(false)
+    end
+
+    it "returns false when file doesn't exist" do
+      path = root.join("executable-non-existing")
+
+      expect(subject.executable?(path)).to be(false)
+    end
+
+    it "returns true for directory" do
+      path = root.join("executable-directory")
+      subject.mkdir(path)
+
+      expect(subject.executable?(path)).to be(true)
     end
   end
 end

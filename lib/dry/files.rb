@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 module Dry
+  # File manipulations
+  #
+  # @since 0.1.0
+  # @api public
   class Files
     require_relative "files/version"
     require_relative "files/error"
@@ -10,9 +14,10 @@ module Dry
     #
     # @param adapter [Dry::FileSystem]
     #
-    # @return [Dry::Files]
+    # @return [Dry::Files] a new files instance
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def initialize(memory: false, adapter: Adapter.call(memory: memory))
       @adapter = adapter
     end
@@ -23,12 +28,27 @@ module Dry
     #
     # @param path [String,Pathname] the path to file
     #
-    # @since x.x.x
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 0.1.0
+    # @api public
     def touch(path)
       mkdir_p(path)
       adapter.touch(path)
     end
 
+    # Read file content
+    #
+    # @param path [String,Pathname] the path to file
+    #
+    # @return [String] the file contents
+    #
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 0.1.0
+    # @api public
+    #
+    # TODO: allow buffered read
     def read(path)
       adapter.read(path)
     end
@@ -40,7 +60,10 @@ module Dry
     # @param path [String,Pathname] the path to file
     # @param content [String, Array<String>] the content to write
     #
-    # @since x.x.x
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 0.1.0
+    # @api public
     def write(path, *content)
       mkdir_p(path)
       open(path, WRITE_MODE, *content) # rubocop:disable Security/Open - this isn't a call to `::Kernel.open`, but to `self.open`
@@ -53,7 +76,10 @@ module Dry
     # @param source [String,Pathname] the path to the source file
     # @param destination [String,Pathname] the path to the destination file
     #
-    # @since x.x.x
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 0.1.0
+    # @api public
     def cp(source, destination)
       mkdir_p(destination)
       adapter.cp(source, destination)
@@ -66,7 +92,8 @@ module Dry
     #
     # @return [String] the joined path
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def join(*path)
       adapter.join(*path)
     end
@@ -81,7 +108,7 @@ module Dry
     #
     # @return [String] the expanded path
     #
-    # @since x.x.x
+    # @since 0.1.0
     def expand_path(path, dir = pwd)
       adapter.expand_path(path, dir)
     end
@@ -90,7 +117,7 @@ module Dry
     #
     # @return [String] the current working directory.
     #
-    # @since x.x.x
+    # @since 0.1.0
     def pwd
       adapter.pwd
     end
@@ -101,7 +128,9 @@ module Dry
     # @param path [String,Pathname] the target directory
     # @param blk [Proc] the code to execute with the target directory
     #
-    # @since x.x.x
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 0.1.0
     def chdir(path, &blk)
       adapter.chdir(path, &blk)
     end
@@ -112,7 +141,10 @@ module Dry
     #
     # @param path [String,Pathname] the path to directory
     #
-    # @since x.x.x
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 0.1.0
+    # @api public
     #
     # @see #mkdir_p
     #
@@ -136,7 +168,10 @@ module Dry
     #
     # @param path [String,Pathname] the path to directory
     #
-    # @since x.x.x
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 0.1.0
+    # @api public
     #
     # @see #mkdir
     #
@@ -157,9 +192,10 @@ module Dry
     #
     # @param path [String,Pathname] the path to file
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
+    # @raise [Dry::Files::IOError] in case of I/O error
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def delete(path)
       adapter.rm(path)
     end
@@ -168,9 +204,10 @@ module Dry
     #
     # @param path [String,Pathname] the path to file
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
+    # @raise [Dry::Files::IOError] in case of I/O error
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def delete_directory(path)
       adapter.rm_rf(path)
     end
@@ -180,11 +217,12 @@ module Dry
     # @param path [String,Pathname] the path to file
     # @param line [String] the line to add
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
+    # @raise [Dry::Files::IOError] in case of I/O error
     #
     # @see #append
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def unshift(path, line)
       content = adapter.readlines(path)
       content.unshift(newline(line))
@@ -197,11 +235,12 @@ module Dry
     # @param path [String,Pathname] the path to file
     # @param contents [String] the contents to add
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
+    # @raise [Dry::Files::IOError] in case of I/O error
     #
     # @see #unshift
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def append(path, contents)
       mkdir_p(path)
 
@@ -218,12 +257,13 @@ module Dry
     # @param target [String,Regexp] the target to replace
     # @param replacement [String] the replacement
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
-    # @raise [ArgumentError] if `target` cannot be found in `path`
+    # @raise [Dry::Files::IOError] in case of I/O error
+    # @raise [Dry::Files::MissingTargetError] if `target` cannot be found in `path`
     #
     # @see #replace_last_line
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def replace_first_line(path, target, replacement)
       content = adapter.readlines(path)
       content[index(content, path, target)] = newline(replacement)
@@ -237,12 +277,13 @@ module Dry
     # @param target [String,Regexp] the target to replace
     # @param replacement [String] the replacement
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
-    # @raise [ArgumentError] if `target` cannot be found in `path`
+    # @raise [Dry::Files::IOError] in case of I/O error
+    # @raise [Dry::Files::MissingTargetError] if `target` cannot be found in `path`
     #
     # @see #replace_first_line
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def replace_last_line(path, target, replacement)
       content = adapter.readlines(path)
       content[-index(content.reverse, path, target) - CONTENT_OFFSET] = newline(replacement)
@@ -256,14 +297,15 @@ module Dry
     # @param target [String,Regexp] the target to replace
     # @param contents [String] the contents to inject
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
-    # @raise [ArgumentError] if `target` cannot be found in `path`
+    # @raise [Dry::Files::IOError] in case of I/O error
+    # @raise [Dry::Files::MissingTargetError] if `target` cannot be found in `path`
     #
     # @see #inject_line_after
     # @see #inject_line_before_last
     # @see #inject_line_after_last
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def inject_line_before(path, target, contents)
       _inject_line_before(path, target, contents, method(:index))
     end
@@ -274,14 +316,15 @@ module Dry
     # @param target [String,Regexp] the target to replace
     # @param contents [String] the contents to inject
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
-    # @raise [ArgumentError] if `target` cannot be found in `path`
+    # @raise [Dry::Files::IOError] in case of I/O error
+    # @raise [Dry::Files::MissingTargetError] if `target` cannot be found in `path`
     #
     # @see #inject_line_before
     # @see #inject_line_after
     # @see #inject_line_after_last
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def inject_line_before_last(path, target, contents)
       _inject_line_before(path, target, contents, method(:rindex))
     end
@@ -292,14 +335,15 @@ module Dry
     # @param target [String,Regexp] the target to replace
     # @param contents [String] the contents to inject
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
-    # @raise [ArgumentError] if `target` cannot be found in `path`
+    # @raise [Dry::Files::IOError] in case of I/O error
+    # @raise [Dry::Files::MissingTargetError] if `target` cannot be found in `path`
     #
     # @see #inject_line_before
     # @see #inject_line_before_last
     # @see #inject_line_after_last
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def inject_line_after(path, target, contents)
       _inject_line_after(path, target, contents, method(:index))
     end
@@ -310,14 +354,15 @@ module Dry
     # @param target [String,Regexp] the target to replace
     # @param contents [String] the contents to inject
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
-    # @raise [ArgumentError] if `target` cannot be found in `path`
+    # @raise [Dry::Files::IOError] in case of I/O error
+    # @raise [Dry::Files::MissingTargetError] if `target` cannot be found in `path`
     #
     # @see #inject_line_before
     # @see #inject_line_after
     # @see #inject_line_before_last
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def inject_line_after_last(path, target, contents)
       _inject_line_after(path, target, contents, method(:rindex))
     end
@@ -329,10 +374,11 @@ module Dry
     # @param target [String,Regexp] the target matcher for Ruby block
     # @param contents [String,Array<String>] the contents to inject
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
-    # @raise [ArgumentError] if `target` cannot be found in `path`
+    # @raise [Dry::Files::IOError] in case of I/O error
+    # @raise [Dry::Files::MissingTargetError] if `target` cannot be found in `path`
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     #
     # @example Inject a single line
     #   require "dry/files"
@@ -446,10 +492,11 @@ module Dry
     # @param target [String,Regexp] the target matcher for Ruby block
     # @param contents [String,Array<String>] the contents to inject
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
-    # @raise [ArgumentError] if `target` cannot be found in `path`
+    # @raise [Dry::Files::IOError] in case of I/O error
+    # @raise [Dry::Files::MissingTargetError] if `target` cannot be found in `path`
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     #
     # @example Inject a single line
     #   require "dry/files"
@@ -566,10 +613,11 @@ module Dry
     # @param path [String,Pathname] the path to file
     # @param target [String,Regexp] the target to remove
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
-    # @raise [ArgumentError] if `target` cannot be found in `path`
+    # @raise [Dry::Files::IOError] in case of I/O error
+    # @raise [Dry::Files::MissingTargetError] if `target` cannot be found in `path`
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     def remove_line(path, target)
       content = adapter.readlines(path)
       i       = index(content, path, target)
@@ -583,10 +631,11 @@ module Dry
     # @param path [String,Pathname] the path to file
     # @param target [String] the target block to remove
     #
-    # @raise [Errno::ENOENT] if the path doesn't exist
-    # @raise [ArgumentError] if `target` cannot be found in `path`
+    # @raise [Dry::Files::IOError] in case of I/O error
+    # @raise [Dry::Files::MissingTargetError] if `target` cannot be found in `path`
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     #
     # @example
     #   require "dry/files"
@@ -626,7 +675,8 @@ module Dry
     #
     # @return [TrueClass,FalseClass] the result of the check
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     #
     # @example
     #   require "dry/files"
@@ -645,7 +695,8 @@ module Dry
     #
     # @return [TrueClass,FalseClass] the result of the check
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     #
     # @example
     #   require "dry/files"
@@ -664,7 +715,8 @@ module Dry
     #
     # @return [TrueClass,FalseClass] the result of the check
     #
-    # @since x.x.x
+    # @since 0.1.0
+    # @api public
     #
     # @example
     #   require "dry/files"
@@ -679,74 +731,74 @@ module Dry
 
     private
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     NEW_LINE = $/ # rubocop:disable Style/SpecialGlobalVars
     private_constant :NEW_LINE
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     WRITE_MODE = (::File::CREAT | ::File::WRONLY | ::File::TRUNC).freeze
     private_constant :WRITE_MODE
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     CONTENT_OFFSET = 1
     private_constant :CONTENT_OFFSET
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     SPACE = " "
     private_constant :SPACE
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     INDENTATION = 2
     private_constant :INDENTATION
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     SPACE_MATCHER = /\A[[:space:]]*/.freeze
     private_constant :SPACE_MATCHER
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     INLINE_OPEN_BLOCK_MATCHER = "{"
     private_constant :INLINE_OPEN_BLOCK_MATCHER
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     INLINE_CLOSE_BLOCK = "}"
     private_constant :INLINE_CLOSE_BLOCK
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     CLOSE_BLOCK = "end"
     private_constant :CLOSE_BLOCK
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     attr_reader :adapter
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     def newline(line = nil)
       "#{line}#{NEW_LINE}"
     end
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     def newline?(content)
       content.end_with?(NEW_LINE)
     end
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     def match?(content, target)
       !line_number(content, target).nil?
     end
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     def open(path, mode, *content)
       adapter.open(path, mode) do |f|
@@ -754,21 +806,21 @@ module Dry
       end
     end
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     def index(content, path, target)
-      line_number(content, target) ||
-        raise(ArgumentError, "Cannot find `#{target}' inside `#{path}'.")
+      line_number(content, target) or
+        raise MissingTargetError.new(target, path)
     end
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     def rindex(content, path, target)
-      line_number(content, target, finder: content.method(:rindex)) ||
-        raise(ArgumentError, "Cannot find `#{target}' inside `#{path}'.")
+      line_number(content, target, finder: content.method(:rindex)) or
+        raise MissingTargetError.new(target, path)
     end
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     def _inject_line_before(path, target, contents, finder)
       content = adapter.readlines(path)
@@ -778,7 +830,7 @@ module Dry
       write(path, content)
     end
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     def _inject_line_after(path, target, contents, finder)
       content = adapter.readlines(path)
@@ -788,7 +840,7 @@ module Dry
       write(path, content)
     end
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     def _offset_block_lines(contents, offset)
       contents.map do |line|
@@ -801,7 +853,7 @@ module Dry
       end.join
     end
 
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     def line_number(content, target, finder: content.method(:index))
       finder.call do |l|
