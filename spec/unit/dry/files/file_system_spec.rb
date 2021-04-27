@@ -180,24 +180,24 @@ RSpec.describe Dry::Files::FileSystem do
   describe "#join" do
     it "joins a single entry" do
       path = "path"
-      expect(root.join(path)).to eq(path)
+      expect(subject.join(path)).to eq(path)
 
       path = Pathname.new(path)
-      expect(root.join(path)).to eq(path.to_s)
+      expect(subject.join(path)).to eq(path.to_s)
     end
 
     it "joins multiple entries" do
       path = %w[path to file]
       expected = path.join(File::SEPARATOR)
 
-      expect(root.join(path)).to eq(expected)
+      expect(subject.join(path)).to eq(expected)
 
       path = path.map { |p| Pathname.new(p) }
-      expect(root.join(path)).to eq(expected)
+      expect(subject.join(path)).to eq(expected)
     end
   end
 
-  xdescribe "#expand_path" do
+  describe "#expand_path" do
     it "expands path from current directory" do
       path = "expand-path"
 
@@ -207,15 +207,6 @@ RSpec.describe Dry::Files::FileSystem do
         expect(subject.expand_path(path, subject.pwd)).to eq(File.join(Dir.pwd, path))
       ensure
         FileUtils.rm_rf(path)
-      end
-    end
-
-    it "expands path from current directory in combination with chdir" do
-      path = root.join("expand-path", "dir", "file")
-      subject.touch(path)
-
-      subject.chdir(root.join("expand-path", "dir")) do
-        expect(subject.expand_path("file")).to eq(path.realpath.to_s)
       end
     end
 
@@ -231,13 +222,13 @@ RSpec.describe Dry::Files::FileSystem do
       path = root.join("expand-path", "absolute")
       subject.touch(path)
 
-      expect(subject.expand_path(path.realpath)).to eq(path.realpath.to_s)
+      expect(subject.expand_path(path.realpath, subject.pwd)).to eq(path.realpath.to_s)
     end
   end
 
   describe "#pwd" do
-    it "returns root directory by default" do
-      expect(subject.pwd).to eq("/")
+    it "returns current directory by default" do
+      expect(subject.pwd).to eq(Dir.pwd)
     end
   end
 
@@ -247,7 +238,7 @@ RSpec.describe Dry::Files::FileSystem do
       subject.mkdir(dir = "path/to/dir")
 
       subject.chdir(dir) do
-        expect(subject.pwd).to eq("dir")
+        expect(subject.pwd).to eq(subject.join(current_directory, dir))
       end
 
       expect(subject.pwd).to eq(current_directory)
@@ -290,7 +281,7 @@ RSpec.describe Dry::Files::FileSystem do
       expect(subject.directory?(path)).to be(true)
     end
 
-    xit "raises error when path isn't writeable" do
+    it "raises error when path isn't writeable" do
       path = root.join("mkdir-not-writeable")
       path.mkpath
       mode = path.stat.mode
@@ -328,7 +319,7 @@ RSpec.describe Dry::Files::FileSystem do
       expect(path).to_not be_found
     end
 
-    xit "raises error when path isn't writeable" do
+    it "raises error when path isn't writeable" do
       parent = root.join("path")
       parent.mkpath
       mode = parent.stat.mode
@@ -443,7 +434,23 @@ RSpec.describe Dry::Files::FileSystem do
       end
     end
 
-    xit "it raises error if path isn't readable"
+    it "it raises error if path isn't readable" do
+      path = root.join("readlines-not-readable")
+      path.mkpath
+      mode = path.stat.mode
+
+      begin
+        path.chmod(0o000)
+
+        expect { subject.readlines(path.join("readlines-not-readable")) }.to raise_error do |exception|
+          expect(exception).to be_kind_of(Dry::Files::IOError)
+          expect(exception.cause).to be_kind_of(Errno::EACCES)
+          expect(exception.message).to include(path.to_s)
+        end
+      ensure
+        path.chmod(mode)
+      end
+    end
   end
 
   describe "#exist?" do
@@ -490,7 +497,7 @@ RSpec.describe Dry::Files::FileSystem do
     end
   end
 
-  xdescribe "#executable?" do
+  describe "#executable?" do
     it "returns true when file is executable" do
       path = root.join("executable-exec")
       subject.touch(path)

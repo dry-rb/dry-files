@@ -71,6 +71,17 @@ module Dry
         end
       end
 
+      # Creates a new file or rewrites the contents
+      # of an existing file for the given path and content
+      # All the intermediate directories are created.
+      #
+      # @param path [String,Pathname] the path to file
+      # @param content [String, Array<String>] the content to write
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
+      # @since 0.1.0
+      # @api private
       def write(path, *content)
         mkdir_p(path)
 
