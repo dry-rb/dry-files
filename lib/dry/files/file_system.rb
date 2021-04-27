@@ -47,6 +47,7 @@ module Dry
         raise IOError, Errno::EISDIR.new(path.to_s) if directory?(path)
 
         with_error_handling do
+          mkdir_p(path)
           file_utils.touch(path, **kwargs)
         end
       end

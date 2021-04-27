@@ -33,7 +33,6 @@ module Dry
     # @since 0.1.0
     # @api public
     def touch(path)
-      mkdir_p(path)
       adapter.touch(path)
     end
 
