@@ -59,7 +59,7 @@ module Dry
           @children&.fetch(segment, nil)
         end
 
-        def put(segment)
+        def set(segment)
           @children ||= {}
           @children[segment] ||= self.class.new(segment)
         end

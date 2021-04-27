@@ -94,7 +94,7 @@ module Dry
         node = @root
 
         for_each_segment(path) do |segment|
-          node = node.put(segment)
+          node = node.set(segment)
         end
       end
 
@@ -129,7 +129,7 @@ module Dry
         node = @root
 
         for_each_segment(path) do |segment|
-          node = node.put(segment)
+          node = node.set(segment)
         end
 
         node.file!(*content)
