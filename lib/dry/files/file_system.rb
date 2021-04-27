@@ -71,6 +71,14 @@ module Dry
         end
       end
 
+      def write(path, *content)
+        mkdir_p(path)
+
+        self.open(path, WRITE_MODE) do |f|
+          f.write(Array(content).flatten.join)
+        end
+      end
+
       # Opens (or creates) a new file for read/write operations.
       #
       # @see https://ruby-doc.org/core/File.html#method-c-open
@@ -304,6 +312,11 @@ module Dry
       end
 
       private
+
+      # @since 0.1.0
+      # @api private
+      WRITE_MODE = (::File::CREAT | ::File::WRONLY | ::File::TRUNC).freeze
+      private_constant :WRITE_MODE
 
       # Catch `SystemCallError` and re-raise a `Dry::Files::IOError`.
       #

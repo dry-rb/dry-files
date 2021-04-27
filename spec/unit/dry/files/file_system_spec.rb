@@ -29,7 +29,7 @@ RSpec.describe Dry::Files::FileSystem do
       expect(path).to have_file_contents("")
     end
 
-    xit "leaves untouched existing file" do
+    it "leaves untouched existing file" do
       path = root.join("touch")
       subject.write(path, "foo")
       subject.touch(path)
@@ -106,7 +106,7 @@ RSpec.describe Dry::Files::FileSystem do
       expect(path).to have_file_contents("new words")
     end
 
-    xit "raises error when path isn't writeable" do
+    it "raises error when path isn't writeable" do
       path = root.join("write-not-writeable")
       path.mkpath
       mode = path.stat.mode

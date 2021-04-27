@@ -64,8 +64,7 @@ module Dry
     # @since 0.1.0
     # @api public
     def write(path, *content)
-      mkdir_p(path)
-      open(path, WRITE_MODE, *content) # rubocop:disable Security/Open - this isn't a call to `::Kernel.open`, but to `self.open`
+      adapter.write(path, *content)
     end
 
     # Copies source into destination.
@@ -734,11 +733,6 @@ module Dry
     # @api private
     NEW_LINE = $/ # rubocop:disable Style/SpecialGlobalVars
     private_constant :NEW_LINE
-
-    # @since 0.1.0
-    # @api private
-    WRITE_MODE = (::File::CREAT | ::File::WRONLY | ::File::TRUNC).freeze
-    private_constant :WRITE_MODE
 
     # @since 0.1.0
     # @api private
