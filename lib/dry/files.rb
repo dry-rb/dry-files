@@ -79,7 +79,6 @@ module Dry
     # @since 0.1.0
     # @api public
     def cp(source, destination)
-      mkdir_p(destination)
       adapter.cp(source, destination)
     end
 

@@ -107,6 +107,8 @@ module Dry
       # @since x.x.x
       # @api private
       def cp(source, destination, **kwargs)
+        mkdir_p(destination)
+
         with_error_handling do
           file_utils.cp(source, destination, **kwargs)
         end
