@@ -484,11 +484,11 @@ RSpec.describe Dry::Files::MemoryFileSystem do
     end
   end
 
-  xdescribe "#executable?" do
+  describe "#executable?" do
     it "returns true when file is executable" do
       path = subject.join("executable-exec")
       subject.touch(path)
-      path.chmod(0o744)
+      subject.chmod(path, 0o744)
 
       expect(subject.executable?(path)).to be(true)
     end

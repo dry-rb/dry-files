@@ -136,6 +136,15 @@ module Dry
         node
       end
 
+      def chmod(path, mode)
+        path = Path[path]
+        node = find(path)
+
+        raise IOError, Errno::ENOENT.new(path.to_s) if node.nil?
+
+        node.chmod!(mode)
+      end
+
       def readlines(path)
         path = Path[path]
         node = find(path)
@@ -155,6 +164,15 @@ module Dry
       def directory?(path)
         path = Path[path]
         !find_directory(path).nil?
+      end
+
+      def executable?(path)
+        path = Path[path]
+
+        node = find(path)
+        return false if node.nil?
+
+        node.executable?
       end
 
       private
