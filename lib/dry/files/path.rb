@@ -7,7 +7,7 @@ module Dry
         def call(*path)
           path = Array(path).flatten
           tokens = path.map do |token|
-            token.split(%r{\\|/})
+            token.to_s.split(%r{\\|/})
           end
 
           tokens

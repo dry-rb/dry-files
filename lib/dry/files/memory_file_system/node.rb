@@ -7,18 +7,33 @@ module Dry
   class Files
     class MemoryFileSystem
       class Node
-        def initialize
+        ROOT_PATH = "/"
+        private_constant :ROOT_PATH
+
+        def self.root
+          new(ROOT_PATH)
+        end
+
+        attr_reader :path
+
+        def initialize(path)
+          @path = path
           @children = nil
           @content = nil
         end
 
-        def put(segment)
-          @children ||= {}
-          @children[segment] ||= self.class.new
-        end
-
         def get(segment)
           @children&.fetch(segment, nil)
+        end
+
+        def put(segment)
+          @children ||= {}
+          @children[segment] ||= self.class.new(segment)
+        end
+
+        def unset(segment)
+          @children ||= {}
+          @children.delete(segment)
         end
 
         def directory?

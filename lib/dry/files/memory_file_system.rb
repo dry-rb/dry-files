@@ -11,18 +11,76 @@ module Dry
     class MemoryFileSystem
       require_relative "./memory_file_system/node"
 
-      def initialize(root: Node.new)
+      def initialize(root: Node.root)
         @root = root
+      end
+
+      def touch(path)
+        path = Path[path]
+        raise IOError, Errno::EISDIR.new(path.to_s) if directory?(path)
+
+        content = read(path) if exist?(path)
+        write(path, content || EMPTY_CONTENT)
       end
 
       def join(*path)
         Path[path]
       end
 
+      def pwd
+        @root.path
+      end
+
+      def cp(source, destination)
+        content = read(source)
+        write(destination, content)
+      end
+
+      def rm(path)
+        path = Path[path]
+        file = nil
+        parent = @root
+        node = @root
+
+        for_each_segment(path) do |segment|
+          break unless node
+
+          file = segment
+          parent = node
+          node = node.get(segment)
+        end
+
+        raise IOError, Errno::ENOENT.new(path.to_s) if node.nil?
+        raise IOError, Errno::EPERM.new(path.to_s) if node.directory?
+
+        parent.unset(file)
+      end
+
+      def rm_rf(path)
+        path = Path[path]
+        file = nil
+        parent = @root
+        node = @root
+
+        for_each_segment(path) do |segment|
+          break unless node
+
+          file = segment
+          parent = node
+          node = node.get(segment)
+        end
+
+        raise IOError, Errno::ENOENT.new(path.to_s) if node.nil?
+
+        parent.unset(file)
+      end
+
       def chdir(path)
         path = Path[path]
-        directory = find_directory(path)
-        raise ArgumentError, "`#{path}' isn't a directory" if directory.nil?
+        directory = find(path)
+
+        raise IOError, Errno::ENOENT.new(path.to_s) if directory.nil?
+        raise IOError, Errno::ENOTDIR.new(path.to_s) unless directory.directory?
 
         current_root = @root
         @root = directory
@@ -58,8 +116,10 @@ module Dry
 
       def read(path)
         path = Path[path]
+        raise IOError, Errno::EISDIR.new(path.to_s) if directory?(path)
+
         file = find_file(path)
-        raise ArgumentError, "`#{path}' isn't a file" if file.nil?
+        raise IOError, Errno::ENOENT.new(path.to_s) if file.nil?
 
         file.read
       end
@@ -78,10 +138,12 @@ module Dry
 
       def readlines(path)
         path = Path[path]
-        file = find_file(path)
-        raise ArgumentError, "`#{path}' isn't a file" if file.nil?
+        node = find(path)
 
-        file.readlines
+        raise IOError, Errno::ENOENT.new(path.to_s) if node.nil?
+        raise IOError, Errno::EISDIR.new(path.to_s) if node.directory?
+
+        node.readlines
       end
 
       def exist?(path)
