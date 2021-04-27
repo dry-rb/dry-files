@@ -372,19 +372,38 @@ RSpec.describe Dry::Files do
         expect(exception.message).to include(path.to_s)
       end
     end
+
+    it "raises error if path is a directory" do
+      path = root.join("delete", "directory")
+      path.mkpath
+
+      expect { subject.delete(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::EPERM)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
   end
 
   describe "#delete_directory" do
     it "deletes directory" do
-      path = root.join("delete", "directory")
+      path = root.join("delete_directory", "directory")
       subject.mkdir(path)
       subject.delete_directory(path)
 
       expect(path).to_not exist
     end
 
+    it "deletes a file" do
+      path = root.join("delete_directory", "file")
+      subject.touch(path)
+      subject.delete_directory(path)
+
+      expect(path).to_not exist
+    end
+
     it "raises error if directory doesn't exist" do
-      path = root.join("delete", "directory")
+      path = root.join("delete_directory", "directory")
 
       expect { subject.delete_directory(path) }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::IOError)
@@ -1504,7 +1523,7 @@ RSpec.describe Dry::Files do
       path = root.join("directory-dir")
       subject.mkdir(path)
 
-      expect(subject.exist?(path)).to be(true)
+      expect(subject.directory?(path)).to be(true)
     end
 
     it "returns false for file" do
