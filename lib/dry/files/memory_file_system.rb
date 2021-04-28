@@ -178,7 +178,7 @@ module Dry
       private
 
       def for_each_segment(path, &blk)
-        segments = path.split(::File::SEPARATOR)
+        segments = Path.split(path)
         segments.each(&blk)
       end
 
