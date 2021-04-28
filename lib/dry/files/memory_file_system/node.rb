@@ -52,7 +52,8 @@ module Dry
           @path = path
           @children = nil
           @content = nil
-          @mode = mode
+
+          chmod!(mode)
         end
 
         def get(segment)
@@ -66,6 +67,8 @@ module Dry
 
         def unset(segment)
           @children ||= {}
+          raise UnknownMemoryNode, segment unless @children.key?(segment)
+
           @children.delete(segment)
         end
 

@@ -606,7 +606,7 @@ RSpec.describe Dry::Files do
 
       expect { subject.replace_first_line(path, "not existing target", "  def self.call(input)") }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
-        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
+        expect(exception.message).to eq("cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -711,7 +711,7 @@ RSpec.describe Dry::Files do
 
       expect { subject.replace_last_line(path, "not existing target", "  def self.call(input)") }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
-        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
+        expect(exception.message).to eq("cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -790,7 +790,7 @@ RSpec.describe Dry::Files do
 
       expect { subject.inject_line_before(path, "not existing target", "  # It performs the operation") }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
-        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
+        expect(exception.message).to eq("cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -879,7 +879,7 @@ RSpec.describe Dry::Files do
 
       expect { subject.inject_line_before_last(path, "not existing target", "  # It performs the operation") }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
-        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
+        expect(exception.message).to eq("cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -958,7 +958,7 @@ RSpec.describe Dry::Files do
 
       expect { subject.inject_line_after(path, "not existing target", "    :result") }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
-        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
+        expect(exception.message).to eq("cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -1047,7 +1047,7 @@ RSpec.describe Dry::Files do
 
       expect { subject.inject_line_after_last(path, "not existing target", "    :result") }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
-        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
+        expect(exception.message).to eq("cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -1127,7 +1127,7 @@ RSpec.describe Dry::Files do
 
       expect { subject.remove_line(path, "not existing target") }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
-        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
+        expect(exception.message).to eq("cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
@@ -1278,7 +1278,7 @@ RSpec.describe Dry::Files do
 
       expect { subject.inject_line_at_block_top(path, "configure", "") }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
-        expect(exception.message).to eq("Cannot find `configure' in `#{path.realpath}'")
+        expect(exception.message).to eq("cannot find `configure' in `#{path.realpath}'")
       end
     end
   end
@@ -1415,7 +1415,7 @@ RSpec.describe Dry::Files do
 
       expect { subject.inject_line_at_block_top(path, "configure", "") }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
-        expect(exception.message).to eq("Cannot find `configure' in `#{path.realpath}'")
+        expect(exception.message).to eq("cannot find `configure' in `#{path.realpath}'")
       end
     end
   end
@@ -1497,7 +1497,7 @@ RSpec.describe Dry::Files do
 
       expect { subject.remove_block(path, "not existing target") }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::MissingTargetError)
-        expect(exception.message).to eq("Cannot find `not existing target' in `#{path}'")
+        expect(exception.message).to eq("cannot find `not existing target' in `#{path}'")
       end
 
       expect(path).to have_content(content)
