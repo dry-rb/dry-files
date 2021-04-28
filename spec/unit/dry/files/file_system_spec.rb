@@ -235,10 +235,10 @@ RSpec.describe Dry::Files::FileSystem do
   describe "#chdir" do
     it "changes current working directory" do
       current_directory = subject.pwd
-      subject.mkdir(dir = "path/to/dir")
+      subject.mkdir(dir = root.join("chdir/to/dir").to_s)
 
       subject.chdir(dir) do
-        expect(subject.pwd).to eq(subject.join(current_directory, dir))
+        expect(subject.pwd).to eq(dir)
       end
 
       expect(subject.pwd).to eq(current_directory)
