@@ -28,7 +28,7 @@ module Dry
       end
 
       def pwd
-        @root.path
+        @root.segment
       end
 
       def cp(source, destination)
@@ -132,7 +132,7 @@ module Dry
           node = node.set(segment)
         end
 
-        node.file!(*content)
+        node.write(*content)
         node
       end
 
@@ -142,7 +142,7 @@ module Dry
 
         raise IOError, Errno::ENOENT.new(path.to_s) if node.nil?
 
-        node.chmod!(mode)
+        node.chmod = mode
       end
 
       def readlines(path)
