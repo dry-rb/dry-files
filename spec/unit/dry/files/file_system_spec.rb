@@ -364,7 +364,14 @@ RSpec.describe Dry::Files::FileSystem do
 
       expect { subject.rm(path) }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::IOError)
-        expect(exception.cause).to be_kind_of(Errno::EPERM)
+
+        with_operating_system(:macos) do
+          expect(exception.cause).to be_kind_of(Errno::EPERM)
+        end
+
+        with_operating_system(:linux) do
+          expect(exception.cause).to be_kind_of(Errno::EISDIR)
+        end
         expect(exception.message).to include(path.to_s)
       end
     end
