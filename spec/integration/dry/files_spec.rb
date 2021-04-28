@@ -380,12 +380,18 @@ RSpec.describe Dry::Files do
       expect { subject.delete(path) }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::IOError)
 
-        with_operating_system(:macos) do
-          expect(exception.cause).to be_kind_of(Errno::EPERM)
+        with_ruby_engine(:mri) do
+          with_operating_system(:macos) do
+            expect(exception.cause).to be_kind_of(Errno::EPERM)
+          end
+
+          with_operating_system(:linux) do
+            expect(exception.cause).to be_kind_of(Errno::EISDIR)
+          end
         end
 
-        with_operating_system(:linux) do
-          expect(exception.cause).to be_kind_of(Errno::EISDIR)
+        with_ruby_engine(:jruby) do
+          expect(exception.cause).to be_kind_of(Errno::EPERM)
         end
 
         expect(exception.message).to include(path.to_s)
