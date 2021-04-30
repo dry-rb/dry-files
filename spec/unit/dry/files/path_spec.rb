@@ -71,4 +71,17 @@ RSpec.describe Dry::Files::Path do
       expect(described_class.absolute?("foo")).to be(false)
     end
   end
+
+  describe ".dirname" do
+    it "returns directory name for given path" do
+      path = ::File::SEPARATOR
+      expect(described_class.dirname(path)).to eq(::File::SEPARATOR)
+
+      path = "#{::File::SEPARATOR}foo"
+      expect(described_class.dirname(path)).to eq(::File::SEPARATOR)
+
+      path = "#{::File::SEPARATOR}#{%w[foo bar].join(::File::SEPARATOR)}"
+      expect(described_class.dirname(path)).to eq("#{::File::SEPARATOR}foo")
+    end
+  end
 end

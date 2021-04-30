@@ -86,7 +86,7 @@ module Dry
 
       # Check if given path is absolute
       #
-      # @param path [String,Pathname] the path to transform
+      # @param path [String,Pathname] the path to check
       #
       # @return [TrueClass,FalseClass] the result of the check
       #
@@ -94,6 +94,18 @@ module Dry
       # @api private
       def self.absolute?(path)
         path.start_with?(SEPARATOR)
+      end
+
+      # Returns all the path, except for the last token
+      #
+      # @param path [String,Pathname] the path to extract directory name from
+      #
+      # @return [String] the directory name
+      #
+      # @since 0.1.0
+      # @api private
+      def self.dirname(path)
+        ::File.dirname(path)
       end
     end
   end

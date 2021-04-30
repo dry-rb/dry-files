@@ -220,14 +220,12 @@ module Dry
         path = Path[path]
 
         mkdir(
-          ::File.dirname(path)
+          Path.dirname(path)
         )
       end
 
       # Copies file content from `source` to `destination`
       # All the intermediate `destination` directories are created.
-      #
-      # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-cp
       #
       # @param source [String,Array<String>] the file(s) or directory to copy
       # @param destination [String,Array<String>] the directory destination
