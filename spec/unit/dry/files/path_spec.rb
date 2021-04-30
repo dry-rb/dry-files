@@ -51,5 +51,11 @@ RSpec.describe Dry::Files::Path do
 
       expect(described_class.split(path)).to eq(expected)
     end
+
+    it "returns empty token when path equals to `#{::File::SEPARATOR}'" do
+      path = ::File::SEPARATOR
+
+      expect(described_class.split(path)).to eq("")
+    end
   end
 end

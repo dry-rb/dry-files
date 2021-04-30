@@ -30,25 +30,19 @@ module Dry
         @file_utils = file_utils
       end
 
-      # Updates modification time (mtime) and access time (atime) of file(s)
-      # in list.
+      # Opens (or creates) a new file for read/write operations.
       #
-      # Files are created if they don’t exist.
+      # @see https://ruby-doc.org/core/File.html#method-c-open
       #
-      # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-touch
-      #
-      # @param path [String, Array<String>] the target path
+      # @param path [String] the target file
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
       # @since x.x.x
       # @api private
-      def touch(path, **kwargs)
-        raise IOError, Errno::EISDIR.new(path.to_s) if directory?(path)
-
+      def open(path, *args, &blk)
         with_error_handling do
-          mkdir_p(path)
-          file_utils.touch(path, **kwargs)
+          file.open(path, *args, &blk)
         end
       end
 
@@ -71,6 +65,45 @@ module Dry
         end
       end
 
+      # Reads the entire file specified by name as individual lines,
+      # and returns those lines in an array
+      #
+      # @see https://ruby-doc.org/core/IO.html#method-c-readlines
+      #
+      # @param path [String] the file to read
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
+      # @since x.x.x
+      # @api private
+      def readlines(path, *args)
+        with_error_handling do
+          file.readlines(path, *args)
+        end
+      end
+
+      # Updates modification time (mtime) and access time (atime) of file(s)
+      # in list.
+      #
+      # Files are created if they don’t exist.
+      #
+      # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-touch
+      #
+      # @param path [String, Array<String>] the target path
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
+      # @since x.x.x
+      # @api private
+      def touch(path, **kwargs)
+        raise IOError, Errno::EISDIR.new(path.to_s) if directory?(path)
+
+        with_error_handling do
+          mkdir_p(path)
+          file_utils.touch(path, **kwargs)
+        end
+      end
+
       # Creates a new file or rewrites the contents
       # of an existing file for the given path and content
       # All the intermediate directories are created.
@@ -90,47 +123,14 @@ module Dry
         end
       end
 
-      # Opens (or creates) a new file for read/write operations.
-      #
-      # @see https://ruby-doc.org/core/File.html#method-c-open
-      #
-      # @param path [String] the target file
-      #
-      # @raise [Dry::Files::IOError] in case of I/O error
-      #
-      # @since x.x.x
-      # @api private
-      def open(path, *args, &blk)
-        with_error_handling do
-          file.open(path, *args, &blk)
-        end
-      end
-
-      # Copies file content from `source` to `destination`
-      #
-      # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-cp
-      #
-      # @param source [String] the file(s) or directory to copy
-      # @param destination [String] the directory destination
-      #
-      # @raise [Dry::Files::IOError] in case of I/O error
-      #
-      # @since x.x.x
-      # @api private
-      def cp(source, destination, **kwargs)
-        mkdir_p(destination)
-
-        with_error_handling do
-          file_utils.cp(source, destination, **kwargs)
-        end
-      end
-
       # Returns a new string formed by joining the strings using Operating
       # System path separator
       #
       # @see https://ruby-doc.org/core/File.html#method-c-join
       #
       # @param path [Array<String,Pathname>] path tokens
+      #
+      # @return [String] the joined path
       #
       # @since x.x.x
       # @api private
@@ -142,7 +142,7 @@ module Dry
       #
       # @see https://ruby-doc.org/core/File.html#method-c-expand_path
       #
-      # @param source [String,Pathname] the path to the file
+      # @param path [String,Pathname] the path to the file
       # @param dir [String,Pathname] the base directory
       #
       # @since x.x.x
@@ -239,9 +239,31 @@ module Dry
         )
       end
 
+      # Copies file content from `source` to `destination`
+      # All the intermediate `destination` directories are created.
+      #
+      # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-cp
+      #
+      # @param source [String] the file(s) or directory to copy
+      # @param destination [String] the directory destination
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
+      # @since x.x.x
+      # @api private
+      def cp(source, destination, **kwargs)
+        mkdir_p(destination)
+
+        with_error_handling do
+          file_utils.cp(source, destination, **kwargs)
+        end
+      end
+
       # Removes (deletes) a file
       #
       # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-rm
+      #
+      # @see #rm_rf
       #
       # @param path [String] the file to remove
       #
@@ -271,28 +293,13 @@ module Dry
         end
       end
 
-      # Reads the entire file specified by name as individual lines,
-      # and returns those lines in an array
-      #
-      # @see https://ruby-doc.org/core/IO.html#method-c-readlines
-      #
-      # @param path [String] the file to read
-      #
-      # @raise [Dry::Files::IOError] in case of I/O error
-      #
-      # @since x.x.x
-      # @api private
-      def readlines(path, *args)
-        with_error_handling do
-          file.readlines(path, *args)
-        end
-      end
-
-      # Check if the given file exist.
+      # Check if the given path exist.
       #
       # @see https://ruby-doc.org/core/File.html#method-c-exist-3F
       #
-      # @param path [String] the file to check
+      # @param path [String,Pathname] the file to check
+      #
+      # @return [TrueClass,FalseClass] the result of the check
       #
       # @since x.x.x
       # @api private
@@ -304,7 +311,9 @@ module Dry
       #
       # @see https://ruby-doc.org/core/File.html#method-c-directory-3F
       #
-      # @param path [String] the directory to check
+      # @param path [String,Pathname] the directory to check
+      #
+      # @return [TrueClass,FalseClass] the result of the check
       #
       # @since x.x.x
       # @api private
@@ -316,7 +325,9 @@ module Dry
       #
       # @see https://ruby-doc.org/core/File.html#method-c-executable-3F
       #
-      # @param path [String] the file to check
+      # @param path [String,Pathname] the path to check
+      #
+      # @return [TrueClass,FalseClass] the result of the check
       #
       # @since x.x.x
       # @api private

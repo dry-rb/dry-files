@@ -198,18 +198,6 @@ RSpec.describe Dry::Files::FileSystem do
   end
 
   describe "#expand_path" do
-    it "expands path from current directory" do
-      path = "expand-path"
-
-      begin
-        subject.touch(path)
-
-        expect(subject.expand_path(path, subject.pwd)).to eq(File.join(Dir.pwd, path))
-      ensure
-        FileUtils.rm_rf(path)
-      end
-    end
-
     it "expands path from given directory" do
       dir = root.join("expand-path", "given-dir")
       path = dir.join("file")
@@ -279,6 +267,21 @@ RSpec.describe Dry::Files::FileSystem do
       subject.mkdir(path)
 
       expect(subject.directory?(path)).to be(true)
+    end
+
+    it "raises error when path is a file" do
+      path = root.join("mkdir-is-file")
+      subject.write(path, content = "foo")
+
+      expect { subject.mkdir(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::EEXIST)
+        expect(exception.message).to include(path.to_s)
+      end
+
+      # ensure it doesn't override already existing file
+      expect(subject.directory?(path)).to be(false)
+      expect(subject.read(path)).to eq(content)
     end
 
     it "raises error when path isn't writeable" do

@@ -191,41 +191,17 @@ RSpec.describe Dry::Files::MemoryFileSystem do
     end
   end
 
-  xdescribe "#expand_path" do
-    it "expands path from current directory" do
-      path = "expand-path"
-
-      begin
-        subject.touch(path)
-
-        expect(subject.expand_path(path, subject.pwd)).to eq(File.join(Dir.pwd, path))
-      ensure
-        FileUtils.rm_rf(path)
-      end
-    end
-
-    it "expands path from current directory in combination with chdir" do
-      path = subject.join("expand-path", "dir", "file")
-      subject.touch(path)
-
-      subject.chdir(subject.join("expand-path", "dir")) do
-        expect(subject.expand_path("file")).to eq(path.realpath.to_s)
-      end
-    end
-
+  describe "#expand_path" do
     it "expands path from given directory" do
       dir = subject.join("expand-path", "given-dir")
-      path = dir.join("file")
-      subject.touch(path)
+      expected = subject.join(dir, path = "file")
 
-      expect(subject.expand_path("file", dir)).to eq(path.realpath.to_s)
+      expect(subject.expand_path(path, dir)).to eq(expected)
     end
 
     it "returns absolute path as it is" do
-      path = subject.join("expand-path", "absolute")
-      subject.touch(path)
-
-      expect(subject.expand_path(path.realpath)).to eq(path.realpath.to_s)
+      path = ::File::SEPARATOR + subject.join("expand-path", "absolute")
+      expect(subject.expand_path(path, subject.pwd)).to eq(path)
     end
   end
 
@@ -284,6 +260,21 @@ RSpec.describe Dry::Files::MemoryFileSystem do
       expect(subject.directory?(path)).to be(true)
     end
 
+    it "raises error when path is a file" do
+      path = subject.join("mkdir-is-file")
+      subject.write(path, content = "foo")
+
+      expect { subject.mkdir(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::EEXIST)
+        expect(exception.message).to include(path.to_s)
+      end
+
+      # ensure it doesn't override already existing file
+      expect(subject.directory?(path)).to be(false)
+      expect(subject.read(path)).to eq(content)
+    end
+
     xit "raises error when path isn't writeable" do
       path = subject.join("mkdir-not-writeable")
       path.mkpath
@@ -320,6 +311,23 @@ RSpec.describe Dry::Files::MemoryFileSystem do
 
       expect(subject.directory?(directory)).to be(true)
       expect(path).to_not be_found
+    end
+
+    # It fails due to an RSpec formatter that crashes
+    xit "raises error when path is a file" do
+      file = subject.join("mkdir_p", "file")
+      subject.write(file, content = "foo")
+      path = subject.join(file, "nested")
+
+      expect { subject.mkdir_p(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::EEXIST)
+        expect(exception.message).to include(path.to_s)
+      end
+
+      # ensure it doesn't override already existing file
+      expect(subject.directory?(path)).to be(false)
+      expect(subject.read(path)).to eq(content)
     end
 
     xit "raises error when path isn't writeable" do

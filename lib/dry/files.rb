@@ -100,7 +100,7 @@ module Dry
     # Relative paths are referenced from the current working directory of
     # the process unless `dir` is given.
     #
-    # @param source [String,Pathname] the path to the file
+    # @param path [String,Pathname] the path to the file
     # @param dir [String,Pathname] the base directory
     #
     # @return [String] the expanded path
