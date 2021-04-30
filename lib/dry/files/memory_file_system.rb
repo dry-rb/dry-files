@@ -6,9 +6,14 @@ module Dry
   class Files
     # Memory File System abstraction to support `Dry::Files`
     #
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     class MemoryFileSystem
+      # @since 0.1.0
+      # @api private
+      EMPTY_CONTENT = nil
+      private_constant :EMPTY_CONTENT
+
       require_relative "./memory_file_system/node"
 
       # Creates a new instance
@@ -18,7 +23,7 @@ module Dry
       #
       # @return [Dry::Files::MemoryFileSystem]
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def initialize(root: Node.root)
         @root = root
@@ -29,10 +34,10 @@ module Dry
       # @param path [String] the target file
       # @yiedparam [Dry::Files::MemoryFileSystem::Node]
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def open(path, *, &blk)
-        file = write(path, EMPTY_CONTENT)
+        file = touch(path)
         blk.call(file)
       end
 
@@ -44,7 +49,7 @@ module Dry
       # @raise [Dry::Files::IOError] in case the target path is a directory or
       #   if the file cannot be found
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def read(path)
         path = Path[path]
@@ -65,7 +70,7 @@ module Dry
       # @raise [Dry::Files::IOError] in case the target path is a directory or
       #   if the file cannot be found
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def readlines(path)
         path = Path[path]
@@ -85,7 +90,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case the target path is a directory
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def touch(path)
         path = Path[path]
@@ -123,7 +128,7 @@ module Dry
       #
       # @return [String] the joined path
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def join(*path)
         Path[path]
@@ -134,7 +139,7 @@ module Dry
       # @param path [String,Array<String>] the path to the file
       # @param dir [String,Array<String>] the base directory
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def expand_path(path, dir)
         return path if Path.absolute?(path)
@@ -146,7 +151,7 @@ module Dry
       #
       # @return [String] the current working directory.
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def pwd
         @root.segment
@@ -163,7 +168,7 @@ module Dry
       # @raise [Dry::Files::IOError] if path cannot be found or it isn't a
       #   directory
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def chdir(path, &blk)
         path = Path[path]
@@ -190,7 +195,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case path is an already existing file
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def mkdir(path)
         path = Path[path]
@@ -214,7 +219,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def mkdir_p(path)
         path = Path[path]
@@ -232,7 +237,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] if source cannot be found
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def cp(source, destination)
         content = read(source)
@@ -247,7 +252,7 @@ module Dry
       #
       # @see #rm_rf
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def rm(path)
         path = Path[path]
@@ -277,7 +282,7 @@ module Dry
       #
       # @see #rm
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def rm_rf(path)
         path = Path[path]
@@ -298,17 +303,14 @@ module Dry
         parent.unset(file)
       end
 
-      EMPTY_CONTENT = nil
-      private_constant :EMPTY_CONTENT
-
-      # Changes node UNIX mode
+      # Sets node UNIX mode
       #
       # @param path [String,Array<String>] the path to the node
       # @param mode [Integer] a UNIX mode, in base 2, 8, 10, or 16
       #
       # @raise [Dry::Files::IOError] if path cannot be found
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def chmod(path, mode)
         path = Path[path]
@@ -319,12 +321,30 @@ module Dry
         node.chmod = mode
       end
 
+      # Gets node UNIX mode
+      #
+      # @param path [String,Array<String>] the path to the node
+      # @return [Integer] the UNIX mode
+      #
+      # @raise [Dry::Files::IOError] if path cannot be found
+      #
+      # @since 0.1.0
+      # @api private
+      def mode(path)
+        path = Path[path]
+        node = find(path)
+
+        raise IOError, Errno::ENOENT.new(path.to_s) if node.nil?
+
+        node.mode
+      end
+
       # Check if the given path exist.
       #
       # @param path [String,Array<String>] the path to the node
       # @return [TrueClass,FalseClass] the result of the check
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def exist?(path)
         path = Path[path]
@@ -337,7 +357,7 @@ module Dry
       # @param path [String,Array<String>] the path to the directory
       # @return [TrueClass,FalseClass] the result of the check
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def directory?(path)
         path = Path[path]
@@ -349,7 +369,7 @@ module Dry
       # @param path [String,Array<String>] the path to the node
       # @return [TrueClass,FalseClass] the result of the check
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def executable?(path)
         path = Path[path]
@@ -362,14 +382,14 @@ module Dry
 
       private
 
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def for_each_segment(path, &blk)
         segments = Path.split(path)
         segments.each(&blk)
       end
 
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def find_directory(path)
         node = find(path)
@@ -380,7 +400,7 @@ module Dry
         node
       end
 
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def find_file(path)
         node = find(path)
@@ -391,7 +411,7 @@ module Dry
         node
       end
 
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def find(path)
         node = @root

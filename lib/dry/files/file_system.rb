@@ -6,14 +6,14 @@ module Dry
   class Files
     # File System abstraction to support `Dry::Files`
     #
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     class FileSystem
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       attr_reader :file
 
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       attr_reader :file_utils
 
@@ -24,25 +24,33 @@ module Dry
       #
       # @return [Dry::Files::FileSystem]
       #
-      # @since x.x.x
+      # @since 0.1.0
       def initialize(file: File, file_utils: FileUtils)
         @file = file
         @file_utils = file_utils
       end
 
-      # Opens (or creates) a new file for read/write operations.
+      # Opens (or creates) a new file for both read/write operations.
+      #
+      # If the file doesn't exist, it creates a new one.
       #
       # @see https://ruby-doc.org/core/File.html#method-c-open
       #
       # @param path [String] the target file
+      # @param mode [String,Integer] Ruby file open mode
+      # @param args [Array<Object>] ::File.open args
+      # @param blk [Proc] the block to yield
+      #
+      # @yieldparam [::File] the opened file
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
-      # @api private
-      def open(path, *args, &blk)
+      # @since 0.1.0
+      def open(path, mode = OPEN_MODE, *args, &blk)
+        touch(path)
+
         with_error_handling do
-          file.open(path, *args, &blk)
+          file.open(path, mode, *args, &blk)
         end
       end
 
@@ -57,7 +65,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def read(path, *args, **kwargs)
         with_error_handling do
@@ -74,7 +82,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def readlines(path, *args)
         with_error_handling do
@@ -93,7 +101,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def touch(path, **kwargs)
         raise IOError, Errno::EISDIR.new(path.to_s) if directory?(path)
@@ -132,7 +140,7 @@ module Dry
       #
       # @return [String] the joined path
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def join(*path)
         file.join(*path)
@@ -145,7 +153,7 @@ module Dry
       # @param path [String,Pathname] the path to the file
       # @param dir [String,Pathname] the base directory
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def expand_path(path, dir)
         file.expand_path(path, dir)
@@ -157,7 +165,7 @@ module Dry
       #
       # @return [String] the current working directory.
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def pwd
         file_utils.pwd
@@ -175,7 +183,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def chdir(path, &blk)
         with_error_handling do
@@ -202,7 +210,7 @@ module Dry
       #   fs.mkdir("/usr/var/project")
       #   # creates all the directory structure (/usr/var/project)
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def mkdir(path, **kwargs)
         with_error_handling do
@@ -231,7 +239,7 @@ module Dry
       #   # creates all the directory structure (/usr/var/project)
       #   # where file.rb will eventually live
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def mkdir_p(path, **kwargs)
         mkdir(
@@ -249,7 +257,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def cp(source, destination, **kwargs)
         mkdir_p(destination)
@@ -269,7 +277,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def rm(path, **kwargs)
         with_error_handling do
@@ -285,7 +293,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def rm_rf(path, *args)
         with_error_handling do
@@ -301,7 +309,7 @@ module Dry
       #
       # @return [TrueClass,FalseClass] the result of the check
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def exist?(path)
         file.exist?(path)
@@ -315,7 +323,7 @@ module Dry
       #
       # @return [TrueClass,FalseClass] the result of the check
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def directory?(path)
         file.directory?(path)
@@ -329,13 +337,18 @@ module Dry
       #
       # @return [TrueClass,FalseClass] the result of the check
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def executable?(path)
         file.executable?(path)
       end
 
       private
+
+      # @since 0.1.0
+      # @api private
+      OPEN_MODE = ::File::RDWR
+      private_constant :OPEN_MODE
 
       # @since 0.1.0
       # @api private
@@ -352,7 +365,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def with_error_handling
         yield

@@ -8,11 +8,11 @@ module Dry
     # are transformed into portable paths that respect the Operating System
     # directory separator.
     module Path
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       SEPARATOR = ::File::SEPARATOR
 
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       EMPTY_TOKEN = ""
       private_constant :EMPTY_TOKEN

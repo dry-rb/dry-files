@@ -12,6 +12,9 @@ module Dry
 
     # Creates a new instance
     #
+    # Memory file system is experimental
+    #
+    # @param memory [TrueClass,FalseClass] use in-memory, ephemeral file system
     # @param adapter [Dry::FileSystem]
     #
     # @return [Dry::Files] a new files instance
@@ -20,20 +23,6 @@ module Dry
     # @api public
     def initialize(memory: false, adapter: Adapter.call(memory: memory))
       @adapter = adapter
-    end
-
-    # Creates an empty file for the given path.
-    # All the intermediate directories are created.
-    # If the path already exists, it doesn't change the contents
-    #
-    # @param path [String,Pathname] the path to file
-    #
-    # @raise [Dry::Files::IOError] in case of I/O error
-    #
-    # @since 0.1.0
-    # @api public
-    def touch(path)
-      adapter.touch(path)
     end
 
     # Read file content
@@ -52,6 +41,20 @@ module Dry
       adapter.read(path)
     end
 
+    # Creates an empty file for the given path.
+    # All the intermediate directories are created.
+    # If the path already exists, it doesn't change the contents
+    #
+    # @param path [String,Pathname] the path to file
+    #
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 0.1.0
+    # @api public
+    def touch(path)
+      adapter.touch(path)
+    end
+
     # Creates a new file or rewrites the contents
     # of an existing file for the given path and content
     # All the intermediate directories are created.
@@ -65,21 +68,6 @@ module Dry
     # @api public
     def write(path, *content)
       adapter.write(path, *content)
-    end
-
-    # Copies source into destination.
-    # All the intermediate directories are created.
-    # If the destination already exists, it overrides the contents.
-    #
-    # @param source [String,Pathname] the path to the source file
-    # @param destination [String,Pathname] the path to the destination file
-    #
-    # @raise [Dry::Files::IOError] in case of I/O error
-    #
-    # @since 0.1.0
-    # @api public
-    def cp(source, destination)
-      adapter.cp(source, destination)
     end
 
     # Returns a new string formed by joining the strings using Operating
@@ -183,6 +171,21 @@ module Dry
     #     # => creates the `path/to` directory
     def mkdir_p(path)
       adapter.mkdir_p(path)
+    end
+
+    # Copies source into destination.
+    # All the intermediate directories are created.
+    # If the destination already exists, it overrides the contents.
+    #
+    # @param source [String,Pathname] the path to the source file
+    # @param destination [String,Pathname] the path to the destination file
+    #
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 0.1.0
+    # @api public
+    def cp(source, destination)
+      adapter.cp(source, destination)
     end
 
     # Deletes given path (file).

@@ -12,6 +12,131 @@ RSpec.describe Dry::Files::FileSystem do
     FileUtils.remove_entry_secure(root)
   end
 
+  describe "#initialize" do
+    it "returns a new instance" do
+      expect(subject).to be_kind_of(described_class)
+    end
+  end
+
+  describe "#open" do
+    context "when file doesn't exist" do
+      it "opens file and yields given block" do
+        path = root.join("open-not-exist")
+        content = "foo"
+
+        subject.open(path) do |file|
+          expect(file).to be_kind_of(::File)
+          expect(file.read).to eq("")
+
+          file.write(content)
+        end
+
+        expect(path).to have_content(content)
+      end
+    end
+
+    context "when file already exists" do
+      it "opens file and yields given block" do
+        path = root.join("open-exist")
+        subject.write(path, content = "foo")
+
+        subject.open(path) do |file|
+          expect(file).to be_kind_of(::File)
+          expect(file.read).to eq(content)
+
+          file.write(content)
+        end
+
+        expect(path).to have_content(content * 2)
+      end
+    end
+  end
+
+  describe "#read" do
+    it "reads file" do
+      path = root.join("read")
+      subject.write(path, expected = "Hello#{newline}World")
+
+      expect(subject.read(path)).to eq(expected)
+    end
+
+    it "raises error when path is a directory" do
+      path = root.join("read-directory")
+      subject.mkdir(path)
+
+      expect { subject.read(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::EISDIR)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+
+    it "raises error when path doesn't exist" do
+      path = root.join("read-does-not-exist")
+
+      expect { subject.read(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+  end
+
+  describe "#readlines" do
+    it "reads file and returns array of lines" do
+      path = root.join("readlines-file")
+      subject.write(path, "hello#{newline}world")
+
+      expect(subject.readlines(path)).to eq(%W[hello#{newline} world])
+    end
+
+    it "reads empty file and returns empty array" do
+      path = root.join("readlines-empty-file")
+      subject.touch(path)
+
+      expect(subject.readlines(path)).to eq([])
+    end
+
+    it "raises error if file doesn't exist" do
+      path = root.join("readlines-non-existing-file")
+
+      expect { subject.readlines(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+
+    it "raises error if path is a directory" do
+      path = root.join("readlines", "directory")
+      subject.mkdir(path)
+
+      expect { subject.readlines(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::EISDIR)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+
+    it "it raises error if path isn't readable" do
+      path = root.join("readlines-not-readable")
+      path.mkpath
+      mode = path.stat.mode
+
+      begin
+        path.chmod(0o000)
+
+        expect { subject.readlines(path.join("readlines-not-readable")) }.to raise_error do |exception|
+          expect(exception).to be_kind_of(Dry::Files::IOError)
+          expect(exception.cause).to be_kind_of(Errno::EACCES)
+          expect(exception.message).to include(path.to_s)
+        end
+      ensure
+        path.chmod(mode)
+      end
+    end
+  end
+
   describe "#touch" do
     it "creates an empty file" do
       path = root.join("touch")
@@ -45,36 +170,6 @@ RSpec.describe Dry::Files::FileSystem do
       expect { subject.touch(path) }.to raise_error do |exception|
         expect(exception).to be_kind_of(Dry::Files::IOError)
         expect(exception.cause).to be_kind_of(Errno::EISDIR)
-        expect(exception.message).to include(path.to_s)
-      end
-    end
-  end
-
-  describe "#read" do
-    it "reads file" do
-      path = root.join("read")
-      subject.write(path, expected = "Hello#{newline}World")
-
-      expect(subject.read(path)).to eq(expected)
-    end
-
-    it "raises error when path is a directory" do
-      path = root.join("read-directory")
-      subject.mkdir(path)
-
-      expect { subject.read(path) }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Dry::Files::IOError)
-        expect(exception.cause).to be_kind_of(Errno::EISDIR)
-        expect(exception.message).to include(path.to_s)
-      end
-    end
-
-    it "raises error when path doesn't exist" do
-      path = root.join("read-does-not-exist")
-
-      expect { subject.read(path) }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Dry::Files::IOError)
-        expect(exception.cause).to be_kind_of(Errno::ENOENT)
         expect(exception.message).to include(path.to_s)
       end
     end
@@ -121,58 +216,6 @@ RSpec.describe Dry::Files::FileSystem do
         end
       ensure
         path.chmod(mode)
-      end
-    end
-  end
-
-  describe "#cp" do
-    let(:source) { root.join("..", "source") }
-
-    before do
-      subject.rm(source) if subject.exist?(source)
-    end
-
-    it "creates a file with given contents" do
-      subject.write(source, "the source")
-
-      destination = root.join("cp")
-      subject.cp(source, destination)
-
-      expect(destination).to be_found
-      expect(destination).to have_file_contents("the source")
-    end
-
-    it "creates intermediate directories" do
-      source = root.join("..", "source")
-      subject.write(source, "the source for intermediate directories")
-
-      destination = root.join("cp", "destination")
-      subject.cp(source, destination)
-
-      expect(destination).to be_found
-      expect(destination).to have_file_contents("the source for intermediate directories")
-    end
-
-    it "overrides already existing file" do
-      source = root.join("..", "source")
-      subject.write(source, "the source")
-
-      destination = root.join("cp")
-      subject.write(destination, "the destination")
-      subject.cp(source, destination)
-
-      expect(destination).to be_found
-      expect(destination).to have_file_contents("the source")
-    end
-
-    it "raises error when source cannot be found" do
-      source = root.join("missing-source")
-      destination = root.join("cp")
-
-      expect { subject.cp(source, destination) }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Dry::Files::IOError)
-        expect(exception.cause).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to include(source.to_s)
       end
     end
   end
@@ -342,6 +385,58 @@ RSpec.describe Dry::Files::FileSystem do
     end
   end
 
+  describe "#cp" do
+    let(:source) { root.join("..", "source") }
+
+    before do
+      subject.rm(source) if subject.exist?(source)
+    end
+
+    it "creates a file with given contents" do
+      subject.write(source, "the source")
+
+      destination = root.join("cp")
+      subject.cp(source, destination)
+
+      expect(destination).to be_found
+      expect(destination).to have_file_contents("the source")
+    end
+
+    it "creates intermediate directories" do
+      source = root.join("..", "source")
+      subject.write(source, "the source for intermediate directories")
+
+      destination = root.join("cp", "destination")
+      subject.cp(source, destination)
+
+      expect(destination).to be_found
+      expect(destination).to have_file_contents("the source for intermediate directories")
+    end
+
+    it "overrides already existing file" do
+      source = root.join("..", "source")
+      subject.write(source, "the source")
+
+      destination = root.join("cp")
+      subject.write(destination, "the destination")
+      subject.cp(source, destination)
+
+      expect(destination).to be_found
+      expect(destination).to have_file_contents("the source")
+    end
+
+    it "raises error when source cannot be found" do
+      source = root.join("missing-source")
+      destination = root.join("cp")
+
+      expect { subject.cp(source, destination) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(source.to_s)
+      end
+    end
+  end
+
   describe "#rm" do
     it "deletes path" do
       path = root.join("delete", "file")
@@ -411,61 +506,6 @@ RSpec.describe Dry::Files::FileSystem do
         expect(exception).to be_kind_of(Dry::Files::IOError)
         expect(exception.cause).to be_kind_of(Errno::ENOENT)
         expect(exception.message).to include(path.to_s)
-      end
-    end
-  end
-
-  describe "#readlines" do
-    it "reads file and returns array of lines" do
-      path = root.join("readlines-file")
-      subject.write(path, "hello#{newline}world")
-
-      expect(subject.readlines(path)).to eq(%W[hello#{newline} world])
-    end
-
-    it "reads empty file and returns empty array" do
-      path = root.join("readlines-empty-file")
-      subject.touch(path)
-
-      expect(subject.readlines(path)).to eq([])
-    end
-
-    it "raises error if file doesn't exist" do
-      path = root.join("readlines-non-existing-file")
-
-      expect { subject.readlines(path) }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Dry::Files::IOError)
-        expect(exception.cause).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to include(path.to_s)
-      end
-    end
-
-    it "raises error if path is a directory" do
-      path = root.join("readlines", "directory")
-      subject.mkdir(path)
-
-      expect { subject.readlines(path) }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Dry::Files::IOError)
-        expect(exception.cause).to be_kind_of(Errno::EISDIR)
-        expect(exception.message).to include(path.to_s)
-      end
-    end
-
-    it "it raises error if path isn't readable" do
-      path = root.join("readlines-not-readable")
-      path.mkpath
-      mode = path.stat.mode
-
-      begin
-        path.chmod(0o000)
-
-        expect { subject.readlines(path.join("readlines-not-readable")) }.to raise_error do |exception|
-          expect(exception).to be_kind_of(Dry::Files::IOError)
-          expect(exception.cause).to be_kind_of(Errno::EACCES)
-          expect(exception.message).to include(path.to_s)
-        end
-      ensure
-        path.chmod(mode)
       end
     end
   end
