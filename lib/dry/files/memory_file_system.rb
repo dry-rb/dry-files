@@ -137,7 +137,7 @@ module Dry
       # @since x.x.x
       # @api private
       def expand_path(path, dir)
-        return path if path.start_with?(::File::SEPARATOR)
+        return path if Path.absolute?(path)
 
         join(dir, path)
       end

@@ -10,6 +10,10 @@ module Dry
     module Path
       # @since x.x.x
       # @api private
+      SEPARATOR = ::File::SEPARATOR
+
+      # @since x.x.x
+      # @api private
       EMPTY_TOKEN = ""
       private_constant :EMPTY_TOKEN
 
@@ -61,7 +65,7 @@ module Dry
 
           tokens
             .flatten
-            .join(::File::SEPARATOR)
+            .join(SEPARATOR)
         end
         alias_method :[], :call
       end
@@ -75,9 +79,21 @@ module Dry
       # @since 0.1.0
       # @api private
       def self.split(path)
-        return EMPTY_TOKEN if path == ::File::SEPARATOR
+        return EMPTY_TOKEN if path == SEPARATOR
 
         path.to_s.split(%r{\\|/})
+      end
+
+      # Check if given path is absolute
+      #
+      # @param path [String,Pathname] the path to transform
+      #
+      # @return [TrueClass,FalseClass] the result of the check
+      #
+      # @since 0.1.0
+      # @api private
+      def self.absolute?(path)
+        path.start_with?(SEPARATOR)
       end
     end
   end

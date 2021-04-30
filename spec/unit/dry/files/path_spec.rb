@@ -52,10 +52,23 @@ RSpec.describe Dry::Files::Path do
       expect(described_class.split(path)).to eq(expected)
     end
 
-    it "returns empty token when path equals to `#{::File::SEPARATOR}'" do
+    it "returns empty token when path equals to current OS directory separator" do
       path = ::File::SEPARATOR
 
       expect(described_class.split(path)).to eq("")
+    end
+  end
+
+  describe ".absolute?" do
+    it "returns true when path starts with current OS directory separator" do
+      separator = ::File::SEPARATOR
+
+      expect(described_class.absolute?(separator)).to be(true)
+      expect(described_class.absolute?("#{separator}foo")).to be(true)
+    end
+
+    it "returns false when path starts with any other token" do
+      expect(described_class.absolute?("foo")).to be(false)
     end
   end
 end
