@@ -2,10 +2,10 @@
 
 module Dry
   class Files
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     class Adapter
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def self.call(memory:)
         if memory

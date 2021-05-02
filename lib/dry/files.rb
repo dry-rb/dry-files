@@ -12,6 +12,9 @@ module Dry
 
     # Creates a new instance
     #
+    # Memory file system is experimental
+    #
+    # @param memory [TrueClass,FalseClass] use in-memory, ephemeral file system
     # @param adapter [Dry::FileSystem]
     #
     # @return [Dry::Files] a new files instance
@@ -20,21 +23,6 @@ module Dry
     # @api public
     def initialize(memory: false, adapter: Adapter.call(memory: memory))
       @adapter = adapter
-    end
-
-    # Creates an empty file for the given path.
-    # All the intermediate directories are created.
-    # If the path already exists, it doesn't change the contents
-    #
-    # @param path [String,Pathname] the path to file
-    #
-    # @raise [Dry::Files::IOError] in case of I/O error
-    #
-    # @since 0.1.0
-    # @api public
-    def touch(path)
-      mkdir_p(path)
-      adapter.touch(path)
     end
 
     # Read file content
@@ -53,6 +41,20 @@ module Dry
       adapter.read(path)
     end
 
+    # Creates an empty file for the given path.
+    # All the intermediate directories are created.
+    # If the path already exists, it doesn't change the contents
+    #
+    # @param path [String,Pathname] the path to file
+    #
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 0.1.0
+    # @api public
+    def touch(path)
+      adapter.touch(path)
+    end
+
     # Creates a new file or rewrites the contents
     # of an existing file for the given path and content
     # All the intermediate directories are created.
@@ -65,24 +67,7 @@ module Dry
     # @since 0.1.0
     # @api public
     def write(path, *content)
-      mkdir_p(path)
-      open(path, WRITE_MODE, *content) # rubocop:disable Security/Open - this isn't a call to `::Kernel.open`, but to `self.open`
-    end
-
-    # Copies source into destination.
-    # All the intermediate directories are created.
-    # If the destination already exists, it overrides the contents.
-    #
-    # @param source [String,Pathname] the path to the source file
-    # @param destination [String,Pathname] the path to the destination file
-    #
-    # @raise [Dry::Files::IOError] in case of I/O error
-    #
-    # @since 0.1.0
-    # @api public
-    def cp(source, destination)
-      mkdir_p(destination)
-      adapter.cp(source, destination)
+      adapter.write(path, *content)
     end
 
     # Returns a new string formed by joining the strings using Operating
@@ -103,7 +88,7 @@ module Dry
     # Relative paths are referenced from the current working directory of
     # the process unless `dir` is given.
     #
-    # @param source [String,Pathname] the path to the file
+    # @param path [String,Pathname] the path to the file
     # @param dir [String,Pathname] the base directory
     #
     # @return [String] the expanded path
@@ -188,6 +173,21 @@ module Dry
       adapter.mkdir_p(path)
     end
 
+    # Copies source into destination.
+    # All the intermediate directories are created.
+    # If the destination already exists, it overrides the contents.
+    #
+    # @param source [String,Pathname] the path to the source file
+    # @param destination [String,Pathname] the path to the destination file
+    #
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 0.1.0
+    # @api public
+    def cp(source, destination)
+      adapter.cp(source, destination)
+    end
+
     # Deletes given path (file).
     #
     # @param path [String,Pathname] the path to file
@@ -210,6 +210,66 @@ module Dry
     # @api public
     def delete_directory(path)
       adapter.rm_rf(path)
+    end
+
+    # Checks if `path` exist
+    #
+    # @param path [String,Pathname] the path to file
+    #
+    # @return [TrueClass,FalseClass] the result of the check
+    #
+    # @since 0.1.0
+    # @api public
+    #
+    # @example
+    #   require "dry/files"
+    #
+    #   Dry::Files.new.exist?(__FILE__) # => true
+    #   Dry::Files.new.exist?(__dir__)  # => true
+    #
+    #   Dry::Files.new.exist?("missing_file") # => false
+    def exist?(path)
+      adapter.exist?(path)
+    end
+
+    # Checks if `path` is a directory
+    #
+    # @param path [String,Pathname] the path to directory
+    #
+    # @return [TrueClass,FalseClass] the result of the check
+    #
+    # @since 0.1.0
+    # @api public
+    #
+    # @example
+    #   require "dry/files"
+    #
+    #   Dry::Files.new.directory?(__dir__)  # => true
+    #   Dry::Files.new.directory?(__FILE__) # => false
+    #
+    #   Dry::Files.new.directory?("missing_directory") # => false
+    def directory?(path)
+      adapter.directory?(path)
+    end
+
+    # Checks if `path` is an executable
+    #
+    # @param path [String,Pathname] the path to file
+    #
+    # @return [TrueClass,FalseClass] the result of the check
+    #
+    # @since 0.1.0
+    # @api public
+    #
+    # @example
+    #   require "dry/files"
+    #
+    #   Dry::Files.new.executable?("/path/to/ruby") # => true
+    #   Dry::Files.new.executable?(__FILE__)        # => false
+    #
+    #   Dry::Files.new.directory?("missing_file") # => false
+    def executable?(path)
+      adapter.executable?(path)
     end
 
     # Adds a new line at the top of the file
@@ -669,77 +729,12 @@ module Dry
       remove_block(path, target) if match?(content, target)
     end
 
-    # Checks if `path` exist
-    #
-    # @param path [String,Pathname] the path to file
-    #
-    # @return [TrueClass,FalseClass] the result of the check
-    #
-    # @since 0.1.0
-    # @api public
-    #
-    # @example
-    #   require "dry/files"
-    #
-    #   Dry::Files.new.exist?(__FILE__) # => true
-    #   Dry::Files.new.exist?(__dir__)  # => true
-    #
-    #   Dry::Files.new.exist?("missing_file") # => false
-    def exist?(path)
-      adapter.exist?(path)
-    end
-
-    # Checks if `path` is a directory
-    #
-    # @param path [String,Pathname] the path to directory
-    #
-    # @return [TrueClass,FalseClass] the result of the check
-    #
-    # @since 0.1.0
-    # @api public
-    #
-    # @example
-    #   require "dry/files"
-    #
-    #   Dry::Files.new.directory?(__dir__)  # => true
-    #   Dry::Files.new.directory?(__FILE__) # => false
-    #
-    #   Dry::Files.new.directory?("missing_directory") # => false
-    def directory?(path)
-      adapter.directory?(path)
-    end
-
-    # Checks if `path` is an executable
-    #
-    # @param path [String,Pathname] the path to file
-    #
-    # @return [TrueClass,FalseClass] the result of the check
-    #
-    # @since 0.1.0
-    # @api public
-    #
-    # @example
-    #   require "dry/files"
-    #
-    #   Dry::Files.new.executable?("/path/to/ruby") # => true
-    #   Dry::Files.new.executable?(__FILE__)        # => false
-    #
-    #   Dry::Files.new.directory?("missing_file") # => false
-    def executable?(path)
-      adapter.executable?(path)
-    end
-
     private
 
     # @since 0.1.0
     # @api private
     NEW_LINE = $/ # rubocop:disable Style/SpecialGlobalVars
     private_constant :NEW_LINE
-
-    # @since 0.1.0
-    # @api private
-    WRITE_MODE = (::File::CREAT | ::File::WRONLY | ::File::TRUNC).freeze
-    private_constant :WRITE_MODE
 
     # @since 0.1.0
     # @api private
@@ -796,14 +791,6 @@ module Dry
     # @api private
     def match?(content, target)
       !line_number(content, target).nil?
-    end
-
-    # @since 0.1.0
-    # @api private
-    def open(path, mode, *content)
-      adapter.open(path, mode) do |f|
-        f.write(Array(content).flatten.join)
-      end
     end
 
     # @since 0.1.0

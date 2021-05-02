@@ -54,7 +54,7 @@ module Dry
       # @since 0.1.0
       # @api private
       def initialize(target, path)
-        super("Cannot find `#{target}' in `#{path}'")
+        super("cannot find `#{target}' in `#{path}'")
 
         @_target = target
         @_path = path
@@ -78,6 +78,42 @@ module Dry
       # @api public
       def path
         @_path
+      end
+    end
+
+    # Unknown memory node
+    #
+    # Raised by the memory adapter (used for testing purposes)
+    #
+    # @since 0.1.0
+    # @api public
+    class UnknownMemoryNodeError < Error
+      # Instantiate a new error
+      #
+      # @param node [String] node name
+      #
+      # @since 0.1.0
+      # @api public
+      def initialize(node)
+        super("unknown memory node `#{node}'")
+      end
+    end
+
+    # Not a memory file
+    #
+    # Raised by the memory adapter (used for testing purposes)
+    #
+    # @since 0.1.0
+    # @api public
+    class NotMemoryFileError < Error
+      # Instantiate a new error
+      #
+      # @param path [String] path name
+      #
+      # @since 0.1.0
+      # @api public
+      def initialize(path)
+        super("not a memory file `#{path}'")
       end
     end
   end

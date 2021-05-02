@@ -6,14 +6,14 @@ module Dry
   class Files
     # File System abstraction to support `Dry::Files`
     #
-    # @since x.x.x
+    # @since 0.1.0
     # @api private
     class FileSystem
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       attr_reader :file
 
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       attr_reader :file_utils
 
@@ -24,30 +24,33 @@ module Dry
       #
       # @return [Dry::Files::FileSystem]
       #
-      # @since x.x.x
+      # @since 0.1.0
       def initialize(file: File, file_utils: FileUtils)
         @file = file
         @file_utils = file_utils
       end
 
-      # Updates modification time (mtime) and access time (atime) of file(s)
-      # in list.
+      # Opens (or creates) a new file for both read/write operations.
       #
-      # Files are created if they don’t exist.
+      # If the file doesn't exist, it creates a new one.
       #
-      # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-touch
+      # @see https://ruby-doc.org/core/File.html#method-c-open
       #
-      # @param path [String, Array<String>] the target path
+      # @param path [String] the target file
+      # @param mode [String,Integer] Ruby file open mode
+      # @param args [Array<Object>] ::File.open args
+      # @param blk [Proc] the block to yield
+      #
+      # @yieldparam [::File] the opened file
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
-      # @api private
-      def touch(path, **kwargs)
-        raise IOError, Errno::EISDIR.new(path.to_s) if directory?(path)
+      # @since 0.1.0
+      def open(path, mode = OPEN_MODE, *args, &blk)
+        touch(path)
 
         with_error_handling do
-          file_utils.touch(path, **kwargs)
+          file.open(path, mode, *args, &blk)
         end
       end
 
@@ -62,7 +65,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def read(path, *args, **kwargs)
         with_error_handling do
@@ -70,36 +73,61 @@ module Dry
         end
       end
 
-      # Opens (or creates) a new file for read/write operations.
+      # Reads the entire file specified by name as individual lines,
+      # and returns those lines in an array
       #
-      # @see https://ruby-doc.org/core/File.html#method-c-open
+      # @see https://ruby-doc.org/core/IO.html#method-c-readlines
       #
-      # @param path [String] the target file
+      # @param path [String] the file to read
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
-      def open(path, *args, &blk)
+      def readlines(path, *args)
         with_error_handling do
-          file.open(path, *args, &blk)
+          file.readlines(path, *args)
         end
       end
 
-      # Copies file content from `source` to `destination`
+      # Updates modification time (mtime) and access time (atime) of file(s)
+      # in list.
       #
-      # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-cp
+      # Files are created if they don’t exist.
       #
-      # @param source [String] the file(s) or directory to copy
-      # @param destination [String] the directory destination
+      # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-touch
+      #
+      # @param path [String, Array<String>] the target path
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
-      def cp(source, destination, **kwargs)
+      def touch(path, **kwargs)
+        raise IOError, Errno::EISDIR.new(path.to_s) if directory?(path)
+
         with_error_handling do
-          file_utils.cp(source, destination, **kwargs)
+          mkdir_p(path)
+          file_utils.touch(path, **kwargs)
+        end
+      end
+
+      # Creates a new file or rewrites the contents
+      # of an existing file for the given path and content
+      # All the intermediate directories are created.
+      #
+      # @param path [String,Pathname] the path to file
+      # @param content [String, Array<String>] the content to write
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
+      # @since 0.1.0
+      # @api private
+      def write(path, *content)
+        mkdir_p(path)
+
+        self.open(path, WRITE_MODE) do |f|
+          f.write(Array(content).flatten.join)
         end
       end
 
@@ -110,7 +138,9 @@ module Dry
       #
       # @param path [Array<String,Pathname>] path tokens
       #
-      # @since x.x.x
+      # @return [String] the joined path
+      #
+      # @since 0.1.0
       # @api private
       def join(*path)
         file.join(*path)
@@ -120,10 +150,10 @@ module Dry
       #
       # @see https://ruby-doc.org/core/File.html#method-c-expand_path
       #
-      # @param source [String,Pathname] the path to the file
+      # @param path [String,Pathname] the path to the file
       # @param dir [String,Pathname] the base directory
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def expand_path(path, dir)
         file.expand_path(path, dir)
@@ -135,7 +165,7 @@ module Dry
       #
       # @return [String] the current working directory.
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def pwd
         file_utils.pwd
@@ -153,7 +183,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def chdir(path, &blk)
         with_error_handling do
@@ -180,7 +210,7 @@ module Dry
       #   fs.mkdir("/usr/var/project")
       #   # creates all the directory structure (/usr/var/project)
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def mkdir(path, **kwargs)
         with_error_handling do
@@ -209,7 +239,7 @@ module Dry
       #   # creates all the directory structure (/usr/var/project)
       #   # where file.rb will eventually live
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def mkdir_p(path, **kwargs)
         mkdir(
@@ -217,15 +247,37 @@ module Dry
         )
       end
 
+      # Copies file content from `source` to `destination`
+      # All the intermediate `destination` directories are created.
+      #
+      # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-cp
+      #
+      # @param source [String] the file(s) or directory to copy
+      # @param destination [String] the directory destination
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
+      # @since 0.1.0
+      # @api private
+      def cp(source, destination, **kwargs)
+        mkdir_p(destination)
+
+        with_error_handling do
+          file_utils.cp(source, destination, **kwargs)
+        end
+      end
+
       # Removes (deletes) a file
       #
       # @see https://ruby-doc.org/stdlib/libdoc/fileutils/rdoc/FileUtils.html#method-c-rm
+      #
+      # @see #rm_rf
       #
       # @param path [String] the file to remove
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def rm(path, **kwargs)
         with_error_handling do
@@ -241,7 +293,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def rm_rf(path, *args)
         with_error_handling do
@@ -249,30 +301,15 @@ module Dry
         end
       end
 
-      # Reads the entire file specified by name as individual lines,
-      # and returns those lines in an array
-      #
-      # @see https://ruby-doc.org/core/IO.html#method-c-readlines
-      #
-      # @param path [String] the file to read
-      #
-      # @raise [Dry::Files::IOError] in case of I/O error
-      #
-      # @since x.x.x
-      # @api private
-      def readlines(path, *args)
-        with_error_handling do
-          file.readlines(path, *args)
-        end
-      end
-
-      # Check if the given file exist.
+      # Check if the given path exist.
       #
       # @see https://ruby-doc.org/core/File.html#method-c-exist-3F
       #
-      # @param path [String] the file to check
+      # @param path [String,Pathname] the file to check
       #
-      # @since x.x.x
+      # @return [TrueClass,FalseClass] the result of the check
+      #
+      # @since 0.1.0
       # @api private
       def exist?(path)
         file.exist?(path)
@@ -282,9 +319,11 @@ module Dry
       #
       # @see https://ruby-doc.org/core/File.html#method-c-directory-3F
       #
-      # @param path [String] the directory to check
+      # @param path [String,Pathname] the directory to check
       #
-      # @since x.x.x
+      # @return [TrueClass,FalseClass] the result of the check
+      #
+      # @since 0.1.0
       # @api private
       def directory?(path)
         file.directory?(path)
@@ -294,15 +333,27 @@ module Dry
       #
       # @see https://ruby-doc.org/core/File.html#method-c-executable-3F
       #
-      # @param path [String] the file to check
+      # @param path [String,Pathname] the path to check
       #
-      # @since x.x.x
+      # @return [TrueClass,FalseClass] the result of the check
+      #
+      # @since 0.1.0
       # @api private
       def executable?(path)
         file.executable?(path)
       end
 
       private
+
+      # @since 0.1.0
+      # @api private
+      OPEN_MODE = ::File::RDWR
+      private_constant :OPEN_MODE
+
+      # @since 0.1.0
+      # @api private
+      WRITE_MODE = (::File::CREAT | ::File::WRONLY | ::File::TRUNC).freeze
+      private_constant :WRITE_MODE
 
       # Catch `SystemCallError` and re-raise a `Dry::Files::IOError`.
       #
@@ -314,7 +365,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since x.x.x
+      # @since 0.1.0
       # @api private
       def with_error_handling
         yield
