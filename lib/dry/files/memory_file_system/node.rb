@@ -203,7 +203,7 @@ module Dry
           raise NotMemoryFileError, segment unless file?
 
           @content.rewind
-          @content.readlines
+          @content.readlines(chomp: true)
         end
 
         # Write file contents
