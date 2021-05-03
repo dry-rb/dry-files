@@ -73,7 +73,7 @@ RSpec.describe Dry::Files::MemoryFileSystem do
       path = subject.join("readlines-file")
       subject.write(path, "hello#{newline}world")
 
-      expect(subject.readlines(path)).to eq(%W[hello#{newline} world])
+      expect(subject.readlines(path)).to eq(%w[hello world])
     end
 
     it "reads empty file and returns empty array" do
