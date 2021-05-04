@@ -4,5 +4,5 @@ source "https://rubygems.org"
 
 eval_gemfile "Gemfile.devtools"
 
-# Specify your gem's dependencies in dry-auto_inject.gemspec
+# Specify your gem's dependencies in dry-files.gemspec
 gemspec
