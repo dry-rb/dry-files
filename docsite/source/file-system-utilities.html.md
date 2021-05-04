@@ -53,20 +53,20 @@ files.mkdir_p("path/to/new/dir/file.rb") # creates "path/to/new/dir"
 
 # copy source file to destination
 # intermediate destination directories are created if they not exist
-file.cp(path, "path/to/destination")
+files.cp(path, "path/to/destination")
 
 # delete a file
-file.delete(path)
+files.delete(path)
 
 # delete a directory
-file.delete_directory("path/to/dir")
+files.delete_directory("path/to/dir")
 
 # check if path exist (files and directories)
-file.exist?(path)
+files.exist?(path)
 
 # check if path is a directory
-file.directory?(path)
+files.directory?(path)
 
 # check if path is an executable (files and directories)
-file.executable?(path)
+files.executable?(path)
 ```
