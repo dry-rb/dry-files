@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# dry-rb is a collection of next-generation Ruby libraries
+#
+# @api public
+# @since 0.1.0
 module Dry
   # File manipulations
   #

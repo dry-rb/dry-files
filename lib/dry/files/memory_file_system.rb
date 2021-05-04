@@ -32,7 +32,7 @@ module Dry
       # Opens (or creates) a new file for read/write operations.
       #
       # @param path [String] the target file
-      # @yiedparam [Dry::Files::MemoryFileSystem::Node]
+      # @yieldparam [Dry::Files::MemoryFileSystem::Node]
       #
       # @since 0.1.0
       # @api private
