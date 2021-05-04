@@ -55,8 +55,8 @@ files.inject_line_at_block_bottom(path, "routes do", "route") # inject route, ri
 
 
 # remove the first matching line
-files.remove(line, "foo") # removes the first line that matches foo
+files.remove_line(line, "foo") # removes the first line that matches foo
 
 # remove the first matching block
-files.remove(line, "configure do") # removes the first block that matches configure
+files.remove_block(line, "configure do") # removes the first block that matches configure
 ```
