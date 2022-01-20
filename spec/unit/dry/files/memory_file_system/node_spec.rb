@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
 require "dry/files/memory_file_system/node"
-require "English"
 
 RSpec.describe Dry::Files::MemoryFileSystem::Node do
   subject { described_class.new(path) }
   let(:path) { "/usr" }
-  let(:newline) { $RS }
+  let(:newline) { $INPUT_RECORD_SEPARATOR }
 
   describe ".root" do
     subject { described_class.root }

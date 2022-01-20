@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "English"
 require "stringio"
 
 module Dry
@@ -216,7 +215,7 @@ module Dry
         # @since 0.1.0
         # @api private
         def write(*content)
-          @content = StringIO.new(content.join($RS))
+          @content = StringIO.new(content.join($INPUT_RECORD_SEPARATOR))
           @mode = DEFAULT_FILE_MODE
         end
 

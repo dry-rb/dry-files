@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "dry/files/memory_file_system"
-require "English"
 
 RSpec.describe Dry::Files::MemoryFileSystem do
   let(:newline) { $INPUT_RECORD_SEPARATOR }

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "english"
+
 # dry-rb is a collection of next-generation Ruby libraries
 #
 # @api public

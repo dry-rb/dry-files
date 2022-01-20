@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "securerandom"
-require "English"
 
 RSpec.describe Dry::Files do
   let(:root) { Pathname.new(Dir.pwd).join("tmp", SecureRandom.uuid).tap(&:mkpath) }
@@ -9,6 +8,12 @@ RSpec.describe Dry::Files do
 
   after do
     FileUtils.remove_entry_secure(root)
+  end
+
+  describe "$INPUT_RECORD_SEPARATOR" do
+    it "is not nil" do
+      expect($INPUT_RECORD_SEPARATOR).not_to be_nil
+    end
   end
 
   describe "#touch" do

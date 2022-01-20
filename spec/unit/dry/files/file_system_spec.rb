@@ -2,7 +2,6 @@
 
 require "dry/files/file_system"
 require "securerandom"
-require "English"
 
 RSpec.describe Dry::Files::FileSystem do
   let(:root) { Pathname.new(Dir.pwd).join("tmp", SecureRandom.uuid).tap(&:mkpath) }
