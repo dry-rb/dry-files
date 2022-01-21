@@ -93,6 +93,14 @@ RSpec.describe Dry::Files do
       expect(path).to have_content("Hello#{newline}World#{newline}")
     end
 
+    it "creates an empty file (without trailing newline)" do
+      path = root.join("write")
+      subject.write(path, "")
+
+      expect(path).to exist
+      expect(path).to have_content("")
+    end
+
     it "creates intermediate directories" do
       path = root.join("path", "to", "file", "write")
       subject.write(path, ":)")
