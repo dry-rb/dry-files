@@ -191,7 +191,7 @@ RSpec.describe Dry::Files::MemoryFileSystem do
 
     it "raises error when trying to write non-string" do
       path = subject.join("write")
-      expect { subject.write(path, ["new", "words"]) }.to raise_error do |exception|
+      expect { subject.write(path, %w[new words]) }.to raise_error do |exception|
         expect(exception).to be_kind_of(ArgumentError)
         expect(exception.message).to eq("Must be string (use `join` or `to_s`)")
       end
