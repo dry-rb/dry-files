@@ -86,7 +86,16 @@ module Dry
       # @api private
       def readlines(path, *args)
         with_error_handling do
-          file.readlines(path, *args)
+          file.readlines(path, *args, chomp: true).then do |lines|
+            # The last item will be an empty string if the file has a
+            # trailing newline. We don't want that in our contents,
+            # especially since we append a newline to every line during `write`
+            if lines.last && lines.last.empty?
+              lines[0..-2]
+            else
+              lines
+            end
+          end
         end
       end
 

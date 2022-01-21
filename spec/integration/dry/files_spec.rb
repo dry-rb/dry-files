@@ -57,9 +57,9 @@ RSpec.describe Dry::Files do
   describe "#read" do
     it "reads file" do
       path = root.join("read")
-      subject.write(path, expected = "Hello#{newline}World")
+      subject.write(path, "Hello#{newline}World")
 
-      expect(subject.read(path)).to eq(expected)
+      expect(subject.read(path)).to eq("Hello#{newline}World#{newline}")
     end
 
     it "raises error when path is a directory" do
@@ -90,7 +90,7 @@ RSpec.describe Dry::Files do
       subject.write(path, "Hello#{newline}World")
 
       expect(path).to exist
-      expect(path).to have_content("Hello#{newline}World")
+      expect(path).to have_content("Hello#{newline}World#{newline}")
     end
 
     it "creates intermediate directories" do
@@ -98,7 +98,7 @@ RSpec.describe Dry::Files do
       subject.write(path, ":)")
 
       expect(path).to exist
-      expect(path).to have_content(":)")
+      expect(path).to have_content(":)#{newline}")
     end
 
     it "overwrites file when it already exists" do
@@ -107,7 +107,7 @@ RSpec.describe Dry::Files do
       subject.write(path, "new words")
 
       expect(path).to exist
-      expect(path).to have_content("new words")
+      expect(path).to have_content("new words#{newline}")
     end
 
     it "raises error when path isn't writeable" do
@@ -143,7 +143,7 @@ RSpec.describe Dry::Files do
       subject.cp(source, destination)
 
       expect(destination).to exist
-      expect(destination).to have_content("the source")
+      expect(destination).to have_content("the source#{newline}")
     end
 
     it "creates intermediate directories" do
@@ -154,7 +154,7 @@ RSpec.describe Dry::Files do
       subject.cp(source, destination)
 
       expect(destination).to exist
-      expect(destination).to have_content("the source for intermediate directories")
+      expect(destination).to have_content("the source for intermediate directories#{newline}")
     end
 
     it "overrides already existing file" do
@@ -166,7 +166,7 @@ RSpec.describe Dry::Files do
       subject.cp(source, destination)
 
       expect(destination).to exist
-      expect(destination).to have_content("the source")
+      expect(destination).to have_content("the source#{newline}")
     end
 
     it "raises error when source cannot be found" do
@@ -460,7 +460,7 @@ RSpec.describe Dry::Files do
       subject.write(path, content)
       subject.unshift(path, "root to: 'home#index'")
 
-      expected = "root to: 'home#index'#{newline}get '/tires', to: 'sunshine#index'"
+      expected = "root to: 'home#index'#{newline}get '/tires', to: 'sunshine#index'#{newline}"
 
       expect(path).to have_content(expected)
     end
