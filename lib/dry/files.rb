@@ -828,7 +828,7 @@ module Dry
     # @api private
     def _offset_block_lines(contents, offset)
       contents.map do |line|
-        case line.lines(chomp: true)
+        case line.lines
         in [line]
           offset + line
         else
