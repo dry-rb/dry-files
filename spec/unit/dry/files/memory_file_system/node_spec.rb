@@ -143,7 +143,7 @@ RSpec.describe Dry::Files::MemoryFileSystem::Node do
       subject.write("foo")
       expect(subject.readlines).to eq(["foo"])
 
-      subject.write(%w[foo bar])
+      subject.write("foo#{newline}bar")
       expect(subject.readlines).to eq(%w[foo bar])
     end
 
@@ -160,7 +160,7 @@ RSpec.describe Dry::Files::MemoryFileSystem::Node do
       subject.write("foo")
       expect(subject.read).to eq("foo")
 
-      subject.write(%w[foo bar])
+      subject.write("foo#{newline}bar")
       expect(subject.read).to eq("foo#{newline}bar")
     end
 

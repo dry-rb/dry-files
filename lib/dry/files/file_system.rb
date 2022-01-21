@@ -129,11 +129,12 @@ module Dry
       # @param content [String] the content to write
       #
       # @raise [Dry::Files::IOError] in case of I/O error
+      # @raise [CanOnlyWriteStringError] if content param isn't a String
       #
       # @since 0.1.0
       # @api private
       def write(path, content)
-        raise ArgumentError, "Must be string (use `join` or `to_s`)" unless content.is_a?(String)
+        raise CanOnlyWriteStringError unless content.is_a?(String)
 
         mkdir_p(path)
 
