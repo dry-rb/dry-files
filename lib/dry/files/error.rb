@@ -116,21 +116,5 @@ module Dry
         super("not a memory file `#{path}'")
       end
     end
-
-    # Internal file system adapters can only take
-    # strings as arguments to their `write` methods.
-    # (The public API can take string or array of strings)
-    #
-    # @since x.x.x
-    # @api private
-    class CanOnlyWriteStringError < Error
-      # Instantiate a new error
-      #
-      # @since x.x.x
-      # @api private
-      def initialize
-        super("Can only write a String (use `join` or `to_s`)")
-      end
-    end
   end
 end

@@ -217,14 +217,6 @@ RSpec.describe Dry::Files::FileSystem do
         path.chmod(mode)
       end
     end
-
-    it "raises error when trying to write non-string" do
-      path = root.join("write")
-      expect { subject.write(path, %w[new words]) }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Dry::Files::CanOnlyWriteStringError)
-        expect(exception.message).to eq("Can only write a String (use `join` or `to_s`)")
-      end
-    end
   end
 
   describe "#join" do

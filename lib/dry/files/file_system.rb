@@ -129,13 +129,10 @@ module Dry
       # @param content [String] the content to write
       #
       # @raise [Dry::Files::IOError] in case of I/O error
-      # @raise [CanOnlyWriteStringError] if content param isn't a String
       #
       # @since 0.1.0
       # @api private
       def write(path, content)
-        raise CanOnlyWriteStringError unless content.is_a?(String)
-
         mkdir_p(path)
 
         self.open(path, WRITE_MODE) do |f|
