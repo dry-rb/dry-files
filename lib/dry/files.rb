@@ -76,7 +76,7 @@ module Dry
     # @since 0.1.0
     # @api public
     def write(path, lines)
-      joined_lines = Array(lines).flatten.map { |line| line.chomp.concat(newline) }.join
+      joined_lines = Array(lines).flatten.map! { |line| line.chomp.concat(newline) }.join
       joined_lines = "" if joined_lines == "\n" # Leave it empty
       adapter.write(path, joined_lines)
     end
