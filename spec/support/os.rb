@@ -13,7 +13,7 @@ module RSpec
                  when /darwin/ then :macos
                  when /win32|mingw|bccwin|cygwin/ then :windows
                  else
-                   raise "unkwnown OS: `#{host_os}'"
+                   raise "unknown OS: `#{host_os}'"
                  end
 
         blk.call if result == os
