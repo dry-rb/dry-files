@@ -11,7 +11,7 @@ module Dry
     class MemoryFileSystem
       # @since 0.1.0
       # @api private
-      EMPTY_CONTENT = nil
+      EMPTY_CONTENT = ""
       private_constant :EMPTY_CONTENT
 
       require_relative "./memory_file_system/node"
@@ -104,12 +104,16 @@ module Dry
       # of an existing file for the given path and content
       # All the intermediate directories are created.
       #
-      # @param path [String, Array<String>] the target path
-      # @param content [String, Array<String>] the content to write
+      # @param path [Array<String>] the target path
+      # @param content [String] the content to write
+      #
+      # @raise [CanOnlyWriteStringError] if content param isn't a String
       #
       # @since 0.1.0
       # @api private
-      def write(path, *content)
+      def write(path, content)
+        raise CanOnlyWriteStringError unless content.is_a?(String)
+
         path = Path[path]
         node = @root
 
@@ -117,7 +121,7 @@ module Dry
           node = node.set(segment)
         end
 
-        node.write(*content)
+        node.write(content)
         node
       end
 

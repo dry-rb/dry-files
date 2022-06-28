@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "dry/files/memory_file_system"
-require "English"
 
 RSpec.describe Dry::Files::MemoryFileSystem do
   let(:newline) { $INPUT_RECORD_SEPARATOR }
@@ -74,7 +73,7 @@ RSpec.describe Dry::Files::MemoryFileSystem do
       path = subject.join("readlines-file")
       subject.write(path, "hello#{newline}world")
 
-      expect(subject.readlines(path)).to eq(%W[hello#{newline} world])
+      expect(subject.readlines(path)).to eq(%w[hello world])
     end
 
     it "reads empty file and returns empty array" do

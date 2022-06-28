@@ -28,6 +28,6 @@ RSpec::Matchers.define :have_file_contents do |expected|
   end
 
   failure_message do |actual|
-    "expected that `#{actual}' would have content '#{expected}', but it has '#{subject.read(actual)}'" # rubocop:disable Layout/LineLength
+    "expected that `#{actual}' would have content '#{expected}', but it has '#{subject.read(actual)}'"
   end
 end

@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
 require "dry/files/memory_file_system/node"
-require "English"
 
 RSpec.describe Dry::Files::MemoryFileSystem::Node do
   subject { described_class.new(path) }
   let(:path) { "/usr" }
-  let(:newline) { $RS }
+  let(:newline) { $INPUT_RECORD_SEPARATOR }
 
   describe ".root" do
     subject { described_class.root }
@@ -144,8 +143,8 @@ RSpec.describe Dry::Files::MemoryFileSystem::Node do
       subject.write("foo")
       expect(subject.readlines).to eq(["foo"])
 
-      subject.write(%w[foo bar])
-      expect(subject.readlines).to eq(["foo#{newline}", "bar"])
+      subject.write("foo#{newline}bar")
+      expect(subject.readlines).to eq(%w[foo bar])
     end
 
     it "raises error when not file" do
@@ -161,7 +160,7 @@ RSpec.describe Dry::Files::MemoryFileSystem::Node do
       subject.write("foo")
       expect(subject.read).to eq("foo")
 
-      subject.write(%w[foo bar])
+      subject.write("foo#{newline}bar")
       expect(subject.read).to eq("foo#{newline}bar")
     end
 

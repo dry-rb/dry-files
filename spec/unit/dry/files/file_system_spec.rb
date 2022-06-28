@@ -2,7 +2,6 @@
 
 require "dry/files/file_system"
 require "securerandom"
-require "English"
 
 RSpec.describe Dry::Files::FileSystem do
   let(:root) { Pathname.new(Dir.pwd).join("tmp", SecureRandom.uuid).tap(&:mkpath) }
@@ -87,7 +86,7 @@ RSpec.describe Dry::Files::FileSystem do
       path = root.join("readlines-file")
       subject.write(path, "hello#{newline}world")
 
-      expect(subject.readlines(path)).to eq(%W[hello#{newline} world])
+      expect(subject.readlines(path)).to eq(%w[hello world])
     end
 
     it "reads empty file and returns empty array" do

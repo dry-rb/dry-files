@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "English" # Required to load $INPUT_RECORD_SEPARATOR
+
 # dry-rb is a collection of next-generation Ruby libraries
 #
 # @api public
@@ -25,8 +27,11 @@ module Dry
     #
     # @since 0.1.0
     # @api public
-    def initialize(memory: false, adapter: Adapter.call(memory: memory))
+    def initialize(memory: false,
+                   adapter: Adapter.call(memory: memory),
+                   newline: $INPUT_RECORD_SEPARATOR)
       @adapter = adapter
+      @newline = newline
     end
 
     # Read file content
@@ -64,14 +69,16 @@ module Dry
     # All the intermediate directories are created.
     #
     # @param path [String,Pathname] the path to file
-    # @param content [String, Array<String>] the content to write
+    # @param lines [String, Array<String>] the content to write
     #
     # @raise [Dry::Files::IOError] in case of I/O error
     #
     # @since 0.1.0
     # @api public
-    def write(path, *content)
-      adapter.write(path, *content)
+    def write(path, lines)
+      joined_lines = Array(lines).flatten.map! { |line| line.chomp.concat(newline) }.join
+      joined_lines = "" if joined_lines == newline # Leave it empty
+      adapter.write(path, joined_lines)
     end
 
     # Returns a new string formed by joining the strings using Operating
@@ -289,7 +296,7 @@ module Dry
     # @api public
     def unshift(path, line)
       content = adapter.readlines(path)
-      content.unshift(newline(line))
+      content.unshift(line)
 
       write(path, content)
     end
@@ -309,8 +316,7 @@ module Dry
       mkdir_p(path)
 
       content = adapter.readlines(path)
-      content << newline unless newline?(content.last)
-      content << newline(contents)
+      content << contents
 
       write(path, content)
     end
@@ -330,7 +336,7 @@ module Dry
     # @api public
     def replace_first_line(path, target, replacement)
       content = adapter.readlines(path)
-      content[index(content, path, target)] = newline(replacement)
+      content[index(content, path, target)] = replacement
 
       write(path, content)
     end
@@ -350,7 +356,7 @@ module Dry
     # @api public
     def replace_last_line(path, target, replacement)
       content = adapter.readlines(path)
-      content[-index(content.reverse, path, target) - CONTENT_OFFSET] = newline(replacement)
+      content[-index(content.reverse, path, target) - CONTENT_OFFSET] = replacement
 
       write(path, content)
     end
@@ -737,11 +743,6 @@ module Dry
 
     # @since 0.1.0
     # @api private
-    NEW_LINE = $/ # rubocop:disable Style/SpecialGlobalVars
-    private_constant :NEW_LINE
-
-    # @since 0.1.0
-    # @api private
     CONTENT_OFFSET = 1
     private_constant :CONTENT_OFFSET
 
@@ -779,17 +780,9 @@ module Dry
     # @api private
     attr_reader :adapter
 
-    # @since 0.1.0
+    # @since x.x.x
     # @api private
-    def newline(line = nil)
-      "#{line}#{NEW_LINE}"
-    end
-
-    # @since 0.1.0
-    # @api private
-    def newline?(content)
-      content.end_with?(NEW_LINE)
-    end
+    attr_reader :newline
 
     # @since 0.1.0
     # @api private
@@ -817,7 +810,7 @@ module Dry
       content = adapter.readlines(path)
       i       = finder.call(content, path, target)
 
-      content.insert(i, newline(contents))
+      content.insert(i, contents)
       write(path, content)
     end
 
@@ -827,7 +820,7 @@ module Dry
       content = adapter.readlines(path)
       i       = finder.call(content, path, target)
 
-      content.insert(i + CONTENT_OFFSET, newline(contents))
+      content.insert(i + CONTENT_OFFSET, contents)
       write(path, content)
     end
 
@@ -835,13 +828,13 @@ module Dry
     # @api private
     def _offset_block_lines(contents, offset)
       contents.map do |line|
-        if line.match?(NEW_LINE)
-          line = line.split(NEW_LINE)
-          _offset_block_lines(line, offset)
+        case line.lines
+        in [line]
+          offset + line
         else
-          offset + line + NEW_LINE
+          _offset_block_lines(line.lines, offset)
         end
-      end.join
+      end
     end
 
     # @since 0.1.0

@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "English"
 require "stringio"
 
 module Dry
@@ -203,20 +202,20 @@ module Dry
           raise NotMemoryFileError, segment unless file?
 
           @content.rewind
-          @content.readlines
+          @content.readlines(chomp: true)
         end
 
         # Write file contents
         # IMPORTANT: This operation turns a node into a file
         #
-        # @param content [String, Array<String>] the file content
+        # @param content [String] the file content
         #
         # @raise [Dry::Files::NotMemoryFileError] if node isn't a file
         #
         # @since 0.1.0
         # @api private
-        def write(*content)
-          @content = StringIO.new(content.join($RS))
+        def write(content)
+          @content = StringIO.new(content)
           @mode = DEFAULT_FILE_MODE
         end
 

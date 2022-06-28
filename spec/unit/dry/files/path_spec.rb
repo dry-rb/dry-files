@@ -5,7 +5,7 @@ require "dry/files/path"
 RSpec.describe Dry::Files::Path do
   describe ".call" do
     let(:unix_file_separator) { "/" }
-    let(:windows_file_separator) { '\\' }
+    let(:windows_file_separator) { "\\" }
 
     context "when string" do
       it "recombines given path with system file separator" do
