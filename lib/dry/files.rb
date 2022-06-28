@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "english"
+require "English" # Required to load $INPUT_RECORD_SEPARATOR
 
 # dry-rb is a collection of next-generation Ruby libraries
 #
