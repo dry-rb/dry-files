@@ -307,6 +307,7 @@ module Dry
     # @api public
     def append(path, contents)
       mkdir_p(path)
+      touch(path)
 
       content = adapter.readlines(path)
       content << newline unless newline?(content.last)
@@ -788,7 +789,7 @@ module Dry
     # @since 0.1.0
     # @api private
     def newline?(content)
-      content.end_with?(NEW_LINE)
+      content&.end_with?(NEW_LINE)
     end
 
     # @since 0.1.0
