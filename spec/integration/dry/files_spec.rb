@@ -513,16 +513,17 @@ RSpec.describe Dry::Files do
       expect(path).to have_content(expected)
     end
 
-    it "raises error if path doesn't exist" do
-      path = root.join("append_no_exist.rb")
+    it "creates a file, if it doesn't exist" do
+      path = root.join("path", "to", "Gemfile")
+      content = <<~CONTENT
+        group :test do
+          gem "capybara"
+        end
+      CONTENT
 
-      expect { subject.append(path, "#{newline} Foo.register Append") }.to raise_error do |exception|
-        expect(exception).to be_kind_of(Dry::Files::IOError)
-        expect(exception.cause).to be_kind_of(Errno::ENOENT)
-        expect(exception.message).to include(path.to_s)
-      end
+      subject.append(path, content)
 
-      expect(path).to_not exist
+      expect(subject.read(path)).to include(content)
     end
   end
 
