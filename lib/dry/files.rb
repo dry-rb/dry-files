@@ -111,6 +111,22 @@ module Dry
       adapter.pwd
     end
 
+    # Opens (or creates) a new file for both read/write operations
+    #
+    # @param path [String] the target file
+    # @param mode [String,Integer] Ruby file open mode
+    # @param args [Array<Object>] ::File.open args
+    # @param blk [Proc] the block to yield
+    #
+    # @yieldparam [File,Dry::Files::MemoryFileSystem::Node] the opened file
+    #
+    # @return [File,Dry::Files::MemoryFileSystem::Node] the opened file
+    #
+    # @raise [Dry::Files::IOError] in case of I/O error
+    def open(path, mode = OPEN_MODE, *args, &blk)
+      adapter.open(path, mode, *args, &blk)
+    end
+
     # Temporary changes the current working directory of the process to the
     # given path and yield the given block.
     #
@@ -735,6 +751,11 @@ module Dry
     end
 
     private
+
+    # @since 0.2.0
+    # @api private
+    OPEN_MODE = ::File::RDWR
+    private_constant :OPEN_MODE
 
     # @since 0.1.0
     # @api private
