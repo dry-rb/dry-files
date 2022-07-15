@@ -4,6 +4,7 @@ require_relative "support/coverage"
 
 $LOAD_PATH.unshift "lib"
 require "dry/files"
+require "pathname"
 require_relative "./support/rspec"
 
 %w[support].each do |dir|
