@@ -14,6 +14,14 @@ module Dry
     require_relative "files/error"
     require_relative "files/adapter"
 
+    # @since 0.3.0
+    # @api public
+    OPEN_MODE = ::File::RDWR
+
+    # @since 0.3.0
+    # @api public
+    WRITE_MODE = (::File::CREAT | ::File::WRONLY | ::File::TRUNC).freeze
+
     # Creates a new instance
     #
     # Memory file system is experimental
@@ -109,6 +117,22 @@ module Dry
     # @since 0.1.0
     def pwd
       adapter.pwd
+    end
+
+    # Opens (or creates) a new file for both read/write operations
+    #
+    # @param path [String] the target file
+    # @param mode [String,Integer] Ruby file open mode
+    # @param args [Array<Object>] ::File.open args
+    # @param blk [Proc] the block to yield
+    #
+    # @yieldparam [File,Dry::Files::MemoryFileSystem::Node] the opened file
+    #
+    # @return [File,Dry::Files::MemoryFileSystem::Node] the opened file
+    #
+    # @raise [Dry::Files::IOError] in case of I/O error
+    def open(path, mode = OPEN_MODE, *args, &blk)
+      adapter.open(path, mode, *args, &blk)
     end
 
     # Temporary changes the current working directory of the process to the

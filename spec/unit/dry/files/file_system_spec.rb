@@ -24,7 +24,7 @@ RSpec.describe Dry::Files::FileSystem do
         path = root.join("open-not-exist")
         content = "foo"
 
-        subject.open(path) do |file|
+        subject.open(path, Dry::Files::OPEN_MODE) do |file|
           expect(file).to be_kind_of(::File)
           expect(file.read).to eq("")
 
@@ -40,7 +40,7 @@ RSpec.describe Dry::Files::FileSystem do
         path = root.join("open-exist")
         subject.write(path, content = "foo")
 
-        subject.open(path) do |file|
+        subject.open(path, Dry::Files::OPEN_MODE) do |file|
           expect(file).to be_kind_of(::File)
           expect(file.read).to eq(content)
 
@@ -48,6 +48,23 @@ RSpec.describe Dry::Files::FileSystem do
         end
 
         expect(path).to have_content(content * 2)
+      end
+    end
+
+    context "when no block is given" do
+      it "returns the open file object" do
+        path = root.join("open-exist")
+        subject.write(path, content = "foo")
+
+        file = subject.open(path, Dry::Files::OPEN_MODE)
+        expect(file).to be_kind_of(::File)
+        expect(file.read).to eq(content)
+
+        file.write(content)
+        file.rewind
+        expect(path).to have_content(content * 2)
+      ensure
+        file.close
       end
     end
   end

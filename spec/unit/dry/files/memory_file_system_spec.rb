@@ -17,7 +17,7 @@ RSpec.describe Dry::Files::MemoryFileSystem do
       it "creates file with empty content and yields node" do
         path = subject.join("open-new")
 
-        subject.open(path) do |file|
+        subject.open(path, Dry::Files::OPEN_MODE) do |file|
           expect(file).to be_kind_of(Dry::Files::MemoryFileSystem::Node)
         end
 
@@ -30,11 +30,22 @@ RSpec.describe Dry::Files::MemoryFileSystem do
         path = subject.join("open-non-existing")
         subject.write("open-non-existing", content = "foo")
 
-        subject.open(path) do |file|
+        subject.open(path, Dry::Files::OPEN_MODE) do |file|
           expect(file).to be_kind_of(Dry::Files::MemoryFileSystem::Node)
         end
 
         expect(path).to have_file_contents(content)
+      end
+    end
+
+    context "when no block is given" do
+      it "returns the open file object" do
+        path = subject.join("open-new")
+
+        file = subject.open(path, Dry::Files::OPEN_MODE)
+        expect(file).to be_kind_of(Dry::Files::MemoryFileSystem::Node)
+
+        expect(path).to have_file_contents("")
       end
     end
   end
