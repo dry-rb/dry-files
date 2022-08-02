@@ -785,30 +785,41 @@ module Dry
     SPACE_MATCHER = /\A[[:space:]]*/.freeze
     private_constant :SPACE_MATCHER
 
-    # @since 0.1.0
+    # @since 0.3.0
     # @api private
-    INLINE_OPEN_BLOCK_MATCHER = "{"
-    private_constant :INLINE_OPEN_BLOCK_MATCHER
+    INLINE_OPEN_BLOCK = "{"
+    private_constant :INLINE_OPEN_BLOCK
 
     # @since 0.1.0
     # @api private
     INLINE_CLOSE_BLOCK = "}"
     private_constant :INLINE_CLOSE_BLOCK
 
+    # @since 0.3.0
+    # @api private
+    OPEN_BLOCK = "do"
+    private_constant :OPEN_BLOCK
+
     # @since 0.1.0
     # @api private
     CLOSE_BLOCK = "end"
     private_constant :CLOSE_BLOCK
 
-    # @since 0.3.0
+    # @since 0.1.0
     # @api private
-    BLOCK_DELIMITER = Delimiter.new("BlockDelimiter", "do", "end")
-    private_constant :BLOCK_DELIMITER
+    INLINE_OPEN_BLOCK_MATCHER = INLINE_CLOSE_BLOCK
+    private_constant :INLINE_OPEN_BLOCK_MATCHER
 
     # @since 0.3.0
     # @api private
-    INLINE_BLOCK_DELIMITER = Delimiter.new("InlineBlockDelimiter", "{", "}")
+    INLINE_BLOCK_DELIMITER = Delimiter.new("InlineBlockDelimiter",
+                                           INLINE_OPEN_BLOCK, INLINE_CLOSE_BLOCK)
     private_constant :INLINE_BLOCK_DELIMITER
+
+    # @since 0.3.0
+    # @api private
+    BLOCK_DELIMITER = Delimiter.new("BlockDelimiter", OPEN_BLOCK, CLOSE_BLOCK)
+    private_constant :BLOCK_DELIMITER
 
     # @since 0.1.0
     # @api private
