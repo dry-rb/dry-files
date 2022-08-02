@@ -145,7 +145,7 @@ RSpec.describe Dry::Files::MemoryFileSystem::Node do
       expect(subject.readlines).to eq(["foo"])
 
       subject.write(%w[foo bar])
-      expect(subject.readlines).to eq(["foo#{newline}", "bar"])
+      expect(subject.readlines).to eq(["foo#{newline}", "bar#{newline}"])
     end
 
     it "raises error when not file" do
@@ -162,7 +162,7 @@ RSpec.describe Dry::Files::MemoryFileSystem::Node do
       expect(subject.read).to eq("foo")
 
       subject.write(%w[foo bar])
-      expect(subject.read).to eq("foo#{newline}bar")
+      expect(subject.read).to eq("foo#{newline}bar#{newline}")
     end
 
     it "sets file mode" do

@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "English"
 require "stringio"
 
 module Dry
@@ -215,8 +214,17 @@ module Dry
         #
         # @since 0.1.0
         # @api private
-        def write(*content)
-          @content = StringIO.new(content.join($RS))
+        def write(content)
+          content = case content
+                    when String
+                      content
+                    when Array
+                      array_to_string(content)
+                    when NilClass
+                      EMPTY_CONTENT
+                    end
+
+          @content = StringIO.new(content)
           @mode = DEFAULT_FILE_MODE
         end
 
@@ -239,6 +247,14 @@ module Dry
         # @api private
         def executable?
           (mode & MODE_USER_EXECUTE).positive?
+        end
+
+        # @since 0.3.0
+        # @api private
+        def array_to_string(content)
+          content.map do |line|
+            line.sub(NEW_LINE_MATCHER, EMPTY_CONTENT)
+          end.join(NEW_LINE) + NEW_LINE
         end
       end
     end

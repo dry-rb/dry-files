@@ -11,7 +11,7 @@ module Dry
     class MemoryFileSystem
       # @since 0.1.0
       # @api private
-      EMPTY_CONTENT = nil
+      EMPTY_CONTENT = ""
       private_constant :EMPTY_CONTENT
 
       require_relative "./memory_file_system/node"
