@@ -762,6 +762,11 @@ module Dry
 
     # @since 0.3.0
     # @api private
+    NEW_LINE_MATCHER = /#{NEW_LINE}\z/.freeze
+    private_constant :NEW_LINE_MATCHER
+
+    # @since 0.3.0
+    # @api private
     EMPTY_LINE = /\A\z/.freeze
     private_constant :EMPTY_LINE
 
