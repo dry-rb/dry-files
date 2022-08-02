@@ -1263,6 +1263,43 @@ RSpec.describe Dry::Files do
       expect(path).to have_content(expected)
     end
 
+    it "injects block at the top of the nested Ruby block" do
+      path = root.join("inject_block_at_nested_block_top.rb")
+      content = <<~CONTENT
+        class InjectBlockBlockTop
+          configure do
+            routes do
+              resources :books do
+                get "/discounted", to: "books.discounted"
+              end
+            end
+          end
+        end
+      CONTENT
+
+      block = <<~BLOCK
+        root { "Hello" }
+      BLOCK
+
+      subject.write(path, content)
+      subject.inject_line_at_block_top(path, "routes", block)
+
+      expected = <<~CONTENT
+        class InjectBlockBlockTop
+          configure do
+            routes do
+              root { "Hello" }
+              resources :books do
+                get "/discounted", to: "books.discounted"
+              end
+            end
+          end
+        end
+      CONTENT
+
+      expect(path).to have_content(expected)
+    end
+
     it "raises error if file cannot be found" do
       path = root.join("inject_line_at_block_top_missing_file.rb")
 
@@ -1392,6 +1429,55 @@ RSpec.describe Dry::Files do
             root __dir__
             settings do
               load!
+            end
+          end
+        end
+      CONTENT
+
+      expect(path).to have_content(expected)
+    end
+
+    it "injects block at the bottom of the nested Ruby block" do
+      path = root.join("inject_block_at_nested_block_bottom.rb")
+      content = <<~CONTENT
+        class Routes
+          define do
+            root { "Hello" }
+
+            slice :foo, at: "/foo" do
+            end
+          end
+        end
+      CONTENT
+
+      block_one = <<~BLOCK
+
+        slice :bar, at: "/bar" do
+        end
+      BLOCK
+
+      block_two = <<~BLOCK
+
+        slice :baz, at: "/baz" do
+        end
+      BLOCK
+
+      subject.write(path, content)
+      subject.inject_line_at_block_bottom(path, "define", block_one)
+      subject.inject_line_at_block_bottom(path, "define", block_two)
+
+      expected = <<~CONTENT
+        class Routes
+          define do
+            root { "Hello" }
+
+            slice :foo, at: "/foo" do
+            end
+
+            slice :bar, at: "/bar" do
+            end
+
+            slice :baz, at: "/baz" do
             end
           end
         end
