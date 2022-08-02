@@ -1405,28 +1405,42 @@ RSpec.describe Dry::Files do
       content = <<~CONTENT
         class Routes
           define do
+            root { "Hello" }
+
             slice :foo, at: "/foo" do
             end
           end
         end
       CONTENT
 
-      block = <<~BLOCK
+      block_one = <<~BLOCK
 
         slice :bar, at: "/bar" do
         end
       BLOCK
 
+      block_two = <<~BLOCK
+
+        slice :baz, at: "/baz" do
+        end
+      BLOCK
+
       subject.write(path, content)
-      subject.inject_line_at_block_bottom(path, "define", block)
+      subject.inject_line_at_block_bottom(path, "define", block_one)
+      subject.inject_line_at_block_bottom(path, "define", block_two)
 
       expected = <<~CONTENT
         class Routes
           define do
+            root { "Hello" }
+
             slice :foo, at: "/foo" do
             end
 
             slice :bar, at: "/bar" do
+            end
+
+            slice :baz, at: "/baz" do
             end
           end
         end

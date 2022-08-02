@@ -657,14 +657,16 @@ module Dry
     #   #   end
     #   # end
     def inject_line_at_block_bottom(path, target, *contents)
-      content  = adapter.readlines(path)
-      starting = index(content, path, target)
-      line     = content[starting]
-      size     = line[SPACE_MATCHER].bytesize
-      closing  = (SPACE * size) +
-                 (target.match?(INLINE_OPEN_BLOCK_MATCHER) ? INLINE_CLOSE_BLOCK : CLOSE_BLOCK)
-      ending   = starting + index(content[starting..-CONTENT_OFFSET], path, closing)
-      offset   = SPACE * (content[ending][SPACE_MATCHER].bytesize + INDENTATION)
+      content   = adapter.readlines(path)
+      starting  = index(content, path, target)
+      line      = content[starting]
+      delimiter = if line.match?(INLINE_OPEN_BLOCK_MATCHER)
+                    INLINE_BLOCK_DELIMITER
+                  else
+                    BLOCK_DELIMITER
+                  end
+      ending    = closing_block_index(content, path, line, delimiter)
+      offset    = SPACE * (content[ending][SPACE_MATCHER].bytesize + INDENTATION)
 
       contents = Array(contents).flatten
       contents = _offset_block_lines(contents, offset)
@@ -736,10 +738,32 @@ module Dry
 
     private
 
+    # @since 0.3.0
+    # @api private
+    class Delimiter
+      # @since 0.3.0
+      # @api private
+      attr_reader :opening, :closing
+
+      # @since 0.3.0
+      # @api private
+      def initialize(name, opening, closing)
+        @name = name
+        @opening = opening
+        @closing = closing
+        freeze
+      end
+    end
+
     # @since 0.1.0
     # @api private
     NEW_LINE = $/ # rubocop:disable Style/SpecialGlobalVars
     private_constant :NEW_LINE
+
+    # @since 0.3.0
+    # @api private
+    EMPTY_LINE = /\A\z/.freeze
+    private_constant :EMPTY_LINE
 
     # @since 0.1.0
     # @api private
@@ -775,6 +799,16 @@ module Dry
     # @api private
     CLOSE_BLOCK = "end"
     private_constant :CLOSE_BLOCK
+
+    # @since 0.3.0
+    # @api private
+    BLOCK_DELIMITER = Delimiter.new("BlockDelimiter", "do", "end")
+    private_constant :BLOCK_DELIMITER
+
+    # @since 0.3.0
+    # @api private
+    INLINE_BLOCK_DELIMITER = Delimiter.new("InlineBlockDelimiter", "{", "}")
+    private_constant :INLINE_BLOCK_DELIMITER
 
     # @since 0.1.0
     # @api private
@@ -812,6 +846,19 @@ module Dry
         raise MissingTargetError.new(target, path)
     end
 
+    # @since 0.3.0
+    # @api private
+    def closing_block_index(content, path, target, delimiter)
+      blocks_count = content.count { |line| line.match?(delimiter.opening) }
+      matching_line = content.find do |line|
+        blocks_count -= 1 if line.match?(delimiter.closing)
+        line if blocks_count.zero?
+      end
+
+      content.index(matching_line) or
+        raise MissingTargetError.new(target, path)
+    end
+
     # @since 0.1.0
     # @api private
     def _inject_line_before(path, target, contents, finder)
@@ -839,6 +886,8 @@ module Dry
         if line.match?(NEW_LINE)
           line = line.split(NEW_LINE)
           _offset_block_lines(line, offset)
+        elsif line.match?(EMPTY_LINE)
+          line + NEW_LINE
         else
           offset + line + NEW_LINE
         end
