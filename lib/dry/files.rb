@@ -665,7 +665,8 @@ module Dry
                   else
                     BLOCK_DELIMITER
                   end
-      ending    = closing_block_index(content, path, line, delimiter)
+      target    = content[starting..]
+      ending    = closing_block_index(target, starting, path, line, delimiter)
       offset    = SPACE * (content[ending][SPACE_MATCHER].bytesize + INDENTATION)
 
       contents = Array(contents).flatten
@@ -864,15 +865,15 @@ module Dry
 
     # @since 0.3.0
     # @api private
-    def closing_block_index(content, path, target, delimiter)
+    def closing_block_index(content, starting, path, target, delimiter)
       blocks_count = content.count { |line| line.match?(delimiter.opening) }
       matching_line = content.find do |line|
         blocks_count -= 1 if line.match?(delimiter.closing)
         line if blocks_count.zero?
       end
 
-      content.index(matching_line) or
-        raise MissingTargetError.new(target, path)
+      (content.index(matching_line) or
+        raise MissingTargetError.new(target, path)) + starting
     end
 
     # @since 0.1.0

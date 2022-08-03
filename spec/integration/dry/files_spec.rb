@@ -1486,6 +1486,41 @@ RSpec.describe Dry::Files do
       expect(path).to have_content(expected)
     end
 
+    it "injects block at the bottom of the deeply nested Ruby block" do
+      path = root.join("inject_block_at_deeply_nested_block_bottom.rb")
+      content = <<~CONTENT
+        class Routes
+          define do
+            root { "Hello" }
+
+            slice :foo, at: "/foo" do
+            end
+          end
+        end
+      CONTENT
+
+      input = <<~BLOCK
+        get "/users", to: "users.index"
+      BLOCK
+
+      subject.write(path, content)
+      subject.inject_line_at_block_bottom(path, "slice :foo", input)
+
+      expected = <<~CONTENT
+        class Routes
+          define do
+            root { "Hello" }
+
+            slice :foo, at: "/foo" do
+              get "/users", to: "users.index"
+            end
+          end
+        end
+      CONTENT
+
+      expect(path).to have_content(expected)
+    end
+
     it "raises error if file cannot be found" do
       path = root.join("inject_line_at_block_bottom_missing_file.rb")
 
