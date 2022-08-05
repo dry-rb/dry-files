@@ -46,7 +46,7 @@ module Dry
       # @raise [Dry::Files::IOError] in case of I/O error
       #
       # @since 0.1.0
-      def open(path, mode = OPEN_MODE, *args, &blk)
+      def open(path, mode, *args, &blk)
         touch(path)
 
         with_error_handling do
@@ -344,16 +344,6 @@ module Dry
       end
 
       private
-
-      # @since 0.1.0
-      # @api private
-      OPEN_MODE = ::File::RDWR
-      private_constant :OPEN_MODE
-
-      # @since 0.1.0
-      # @api private
-      WRITE_MODE = (::File::CREAT | ::File::WRONLY | ::File::TRUNC).freeze
-      private_constant :WRITE_MODE
 
       # Catch `SystemCallError` and re-raise a `Dry::Files::IOError`.
       #

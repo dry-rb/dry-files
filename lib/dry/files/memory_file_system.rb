@@ -33,12 +33,18 @@ module Dry
       #
       # @param path [String] the target file
       # @yieldparam [Dry::Files::MemoryFileSystem::Node]
+      # @return [Dry::Files::MemoryFileSystem::Node]
       #
       # @since 0.1.0
       # @api private
-      def open(path, *, &blk)
+      def open(path, *)
         file = touch(path)
-        blk.call(file)
+
+        if block_given?
+          yield file
+        else
+          file
+        end
       end
 
       # Read file contents
