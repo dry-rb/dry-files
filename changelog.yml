@@ -1,11 +1,11 @@
 ---
-- version: unreleased
-  summary: 
-  date: 
-  fixed: 
+- version: 0.3.0
+  summary:
+  date: '2022-09-19'
+  fixed:
   added:
   - 'Support for `inject_line_at_class_bottom` (via #13) (@jodosha)'
-  changed: 
+  changed:
 - version: 0.2.0
   date: '2022-07-10'
   added:
@@ -14,7 +14,7 @@
 - version: 0.1.0
   date: '2021-05-04'
   summary: Initial release
-  fixed: 
+  fixed:
   added:
   - Introduced `Dry::Files`
   - 'Introduced `Dry::Files#initialize` which accepts an optional `memory: true/false`
@@ -60,4 +60,4 @@
     line of the matching code block (@jodosha)
   - Introduced `Dry::Files#remove_line` to remove the first matching line (@jodosha)
   - Introduced `Dry::Files#remove_block` remove the first matching block (@jodosha)
-  changed: 
+  changed:
