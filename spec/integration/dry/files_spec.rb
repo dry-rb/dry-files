@@ -1632,6 +1632,165 @@ RSpec.describe Dry::Files do
     end
   end
 
+  describe "#inject_line_at_class_bottom" do
+    it "injects line at the bottom of the class" do
+      path = root.join("inject_line_at_class_bottom.rb")
+      content = <<~CONTENT
+        class InjectLineClassBottom
+        end
+      CONTENT
+
+      subject.write(path, content)
+      subject.inject_line_at_class_bottom(path, "InjectLineClassBottom", "attr_accessor :foo")
+
+      expected = <<~CONTENT
+        class InjectLineClassBottom
+          attr_accessor :foo
+        end
+      CONTENT
+
+      expect(path).to have_content(expected)
+    end
+
+    it "injects line at the bottom of the class when there class level blocks" do
+      path = root.join("inject_line_at_class_with_blocks_bottom.rb")
+      content = <<~CONTENT
+        class InjectLineClassWithBlocksBottom
+          configure do
+            setting :db do
+              setting :url
+            end
+          end
+
+          wrap { |context| }
+          wrap { |ctx, env|
+            env.each_key do |key|
+            end
+          }
+        end
+      CONTENT
+
+      subject.write(path, content)
+      subject.inject_line_at_class_bottom(path, "InjectLineClassWithBlocksBottom", "attr_accessor :foo")
+
+      expected = <<~CONTENT
+        class InjectLineClassWithBlocksBottom
+          configure do
+            setting :db do
+              setting :url
+            end
+          end
+
+          wrap { |context| }
+          wrap { |ctx, env|
+            env.each_key do |key|
+            end
+          }
+          attr_accessor :foo
+        end
+      CONTENT
+
+      expect(path).to have_content(expected)
+    end
+
+    it "injects line at the bottom of the module + class" do
+      path = root.join("inject_line_at_module_plus_class_bottom.rb")
+      content = <<~CONTENT
+        module Foo
+          class Bar
+          end
+        end
+      CONTENT
+
+      subject.write(path, content)
+      subject.inject_line_at_class_bottom(path, "Bar", "attr_accessor :foo")
+
+      expected = <<~CONTENT
+        module Foo
+          class Bar
+            attr_accessor :foo
+          end
+        end
+      CONTENT
+
+      expect(path).to have_content(expected)
+    end
+
+    it "injects line at the bottom of the module + class and blocks" do
+      path = root.join("inject_line_at_module_plus_class_and_blocks_bottom.rb")
+      content = <<~CONTENT
+        module Foo
+          class Bar
+            configure do
+              setting :db do
+                setting :url
+              end
+            end
+          end
+        end
+      CONTENT
+
+      subject.write(path, content)
+      subject.inject_line_at_class_bottom(path, "Bar", "attr_accessor :foo")
+
+      expected = <<~CONTENT
+        module Foo
+          class Bar
+            configure do
+              setting :db do
+                setting :url
+              end
+            end
+            attr_accessor :foo
+          end
+        end
+      CONTENT
+
+      expect(path).to have_content(expected)
+    end
+
+    xit "injects line at the bottom of the class with inner classes and modules" do
+      path = root.join("inject_line_at_class_bottom.rb")
+      content = <<~CONTENT
+        class InjectLineClassWithInnerClassesBottom
+          module ClassMethods
+          end
+
+          module Mixin
+            included do |base|
+              base.extend(ClassMethods)
+            end
+          end
+
+          class Result
+          end
+        end
+      CONTENT
+
+      subject.write(path, content)
+      subject.inject_line_at_class_bottom(path, "InjectLineClassWithInnerClassesBottom", "attr_accessor :foo")
+
+      expected = <<~CONTENT
+        class InjectLineClassWithInnerClassesBottom
+          module ClassMethods
+          end
+
+          module Mixin
+            included do |base|
+              base.extend(ClassMethods)
+            end
+          end
+
+          class Result
+          end
+          attr_accessor :foo
+        end
+      CONTENT
+
+      expect(path).to have_content(expected)
+    end
+  end
+
   describe "#exist?" do
     it "returns true for file" do
       path = root.join("exist-file")
