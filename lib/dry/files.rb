@@ -700,6 +700,81 @@ module Dry
       write(path, content)
     end
 
+    # Inject `contents` in `path` at the bottom of the Ruby class that matches `target`.
+    # The given `contents` will appear at the BOTTOM of the Ruby class.
+    #
+    # @param path [String,Pathname] the path to file
+    # @param target [String,Regexp] the target matcher for Ruby class
+    # @param contents [String,Array<String>] the contents to inject
+    #
+    # @raise [Dry::Files::IOError] in case of I/O error
+    # @raise [Dry::Files::MissingTargetError] if `target` cannot be found in `path`
+    #
+    # @since 0.4.0
+    # @api public
+    #
+    # @example Inject a single line
+    #   require "dry/files"
+    #
+    #   files = Dry::Files.new
+    #   path = "config/application.rb"
+    #
+    #   File.read(path)
+    #   # # frozen_string_literal: true
+    #   #
+    #   # class Application
+    #   # end
+    #
+    #   # inject a single line
+    #   files.inject_line_at_class_bottom(path, /Application/, %(attr_accessor :name))
+    #
+    #   File.read(path)
+    #   # # frozen_string_literal: true
+    #   #
+    #   # class Application
+    #   #   attr_accessor :name
+    #   # end
+    #
+    # @example Inject multiple lines
+    #   require "dry/files"
+    #
+    #   files = Dry::Files.new
+    #   path = "math.rb"
+    #
+    #   File.read(path)
+    #   # # frozen_string_literal: true
+    #   #
+    #   # class Math
+    #   # end
+    #
+    #   # inject multiple lines
+    #   files.inject_line_at_class_bottom(path,
+    #                                     /Math/,
+    #                                     ["def sum(a, b)", "  a + b", "end"])
+    #
+    #   File.read(path)
+    #   # # frozen_string_literal: true
+    #   #
+    #   # class Math
+    #   #   def sum(a, b)
+    #   #     a + b
+    #   #   end
+    #   # end
+    def inject_line_at_class_bottom(path, target, *contents)
+      content   = adapter.readlines(path)
+      starting  = index(content, path, target)
+      line      = content[starting]
+      target    = content[starting..]
+      ending    = closing_class_index(target, starting, path, line, BLOCK_DELIMITER)
+      offset    = SPACE * (content[ending][SPACE_MATCHER].bytesize + INDENTATION)
+
+      contents = Array(contents).flatten
+      contents = _offset_block_lines(contents, offset)
+
+      content.insert(ending, contents)
+      write(path, content)
+    end
+
     # Removes line from `path`, matching `target`.
     #
     # @param path [String,Pathname] the path to file
@@ -889,8 +964,8 @@ module Dry
 
     # @since 0.3.0
     # @api private
-    def closing_block_index(content, starting, path, target, delimiter)
-      blocks_count = content.count { |line| line.match?(delimiter.opening) }
+    def closing_block_index(content, starting, path, target, delimiter, count_offset = 0) # rubocop:disable Metrics/ParameterLists
+      blocks_count = content.count { |line| line.match?(delimiter.opening) } + count_offset
       matching_line = content.find do |line|
         blocks_count -= 1 if line.match?(delimiter.closing)
         line if blocks_count.zero?
@@ -898,6 +973,12 @@ module Dry
 
       (content.index(matching_line) or
         raise MissingTargetError.new(target, path)) + starting
+    end
+
+    # @since 0.4.0
+    # @api private
+    def closing_class_index(content, starting, path, target, delimiter)
+      closing_block_index(content, starting, path, target, delimiter, 1)
     end
 
     # @since 0.1.0
