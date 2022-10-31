@@ -7,6 +7,4 @@ gemspec:
   email: ["me@lucaguidi.com"]
   summary: "file utilities"
   development_dependencies:
-    - ['rake', '~> 13.0']
     - ['rspec', '~> 3.10']
-    - ['rubocop', '~> 1.12']
