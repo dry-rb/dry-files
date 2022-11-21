@@ -1,4 +1,10 @@
 ---
+- version: 1.0.1
+  summary:
+  date: 2022-11-21
+  fixed:
+  - |-
+    Do not introduce multiple newlines in `Dry::Files#append` (@timriley in #14)
 - version: 1.0.0
   summary:
   date: 2022-11-04
