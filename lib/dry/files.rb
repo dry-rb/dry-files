@@ -933,6 +933,8 @@ module Dry
     # @since 0.1.0
     # @api private
     def newline(line = nil)
+      return line if line.to_s.end_with?(NEW_LINE)
+
       "#{line}#{NEW_LINE}"
     end
 

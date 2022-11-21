@@ -494,10 +494,26 @@ RSpec.describe Dry::Files do
       expect(path).to have_content(expected)
     end
 
-    # This gem was originally extracted from hanami-utils, into dry-cli,
-    # and finally into dry-files.
-    #
-    # https://github.com/hanami/utils/issues/348
+    it "does not add multiple newlines to the bottom of the file" do
+      path = root.join("append.rb")
+      content = <<~CONTENT
+        class Append
+        end
+      CONTENT
+
+      subject.write(path, content)
+      subject.append(path, "#{newline}Foo.register Append\n")
+
+      expected = <<~CONTENT
+        class Append
+        end
+
+        Foo.register Append
+      CONTENT
+
+      expect(path).to have_content(expected)
+    end
+
     it "adds a line at the bottom of a file that doesn't end with a newline" do
       path = root.join("append_missing_newline.rb")
       content = "root to: 'home#index'"
