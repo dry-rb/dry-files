@@ -626,4 +626,39 @@ RSpec.describe Dry::Files::MemoryFileSystem do
       expect(subject.executable?(path)).to be(true)
     end
   end
+
+  describe "#entries" do
+    it "raises an error when the path does not exist" do
+      path = subject.join("file-1.txt")
+
+      expect { subject.entries(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+
+    it "raises an error when the path is a file" do
+      path = subject.join("file-1.txt")
+      subject.touch(path)
+
+      expect { subject.entries(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOTDIR)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+
+    it "returns entries when the path is a directory" do
+      subject.touch(subject.join("file-1.txt"))
+      subject.touch(subject.join("file-2.txt"))
+
+      expect(subject.entries(subject.join)).to eq [
+        ".",
+        "..",
+        "file-1.txt",
+        "file-2.txt"
+      ]
+    end
+  end
 end

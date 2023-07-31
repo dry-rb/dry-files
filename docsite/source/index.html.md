@@ -99,6 +99,9 @@ file.directory?(path)
 
 # check if path is an executable (files and directories)
 file.executable?(path)
+
+# read entries from a directory
+files.entries(path)
 ```
 
 ### Adapters
