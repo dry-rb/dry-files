@@ -386,6 +386,24 @@ module Dry
         node.executable?
       end
 
+      # Reads entries from a directory
+      #
+      # @param path [String,Pathname] the path to file
+      # @return [Array<String>] the entries
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
+      # @since 1.0.1
+      # @api private
+      def entries(path)
+        path = Path[path]
+        node = find(path)
+        raise IOError, Errno::ENOENT.new(path.to_s) if node.nil?
+        raise IOError, Errno::ENOTDIR.new(path.to_s) unless node.directory?
+
+        [".", ".."] + node.children.keys
+      end
+
       private
 
       # @since 0.1.0
