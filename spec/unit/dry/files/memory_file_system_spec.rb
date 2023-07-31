@@ -660,5 +660,11 @@ RSpec.describe Dry::Files::MemoryFileSystem do
         "file-2.txt"
       ]
     end
+
+    it "returns an array with only relative paths on an empty directory" do
+      subject.mkdir("empty")
+
+      expect(subject.entries(subject.join("empty"))).to eq [".", ".."]
+    end
   end
 end
