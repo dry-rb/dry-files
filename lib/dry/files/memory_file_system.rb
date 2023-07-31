@@ -401,7 +401,7 @@ module Dry
         raise IOError, Errno::ENOENT.new(path.to_s) if node.nil?
         raise IOError, Errno::ENOTDIR.new(path.to_s) unless node.directory?
 
-        [".", ".."] + node.children.keys
+        [".", ".."] + Array(node.children&.keys)
       end
 
       private
