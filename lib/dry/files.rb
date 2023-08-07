@@ -862,12 +862,12 @@ module Dry
 
     # @since 0.3.0
     # @api private
-    NEW_LINE_MATCHER = /#{NEW_LINE}\z/.freeze
+    NEW_LINE_MATCHER = /#{NEW_LINE}\z/
     private_constant :NEW_LINE_MATCHER
 
     # @since 0.3.0
     # @api private
-    EMPTY_LINE = /\A\z/.freeze
+    EMPTY_LINE = /\A\z/
     private_constant :EMPTY_LINE
 
     # @since 0.1.0
@@ -887,7 +887,7 @@ module Dry
 
     # @since 0.1.0
     # @api private
-    SPACE_MATCHER = /\A[[:space:]]*/.freeze
+    SPACE_MATCHER = /\A[[:space:]]*/
     private_constant :SPACE_MATCHER
 
     # @since 0.3.0
