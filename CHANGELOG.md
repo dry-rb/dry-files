@@ -5,7 +5,7 @@
 
 ### Fixed
 
-- Ensure Dry::Files#inject_line_at_block_bottom to not match false positive closing blocks (@jodosha in #17)
+- Ensure `Dry::Files#inject_line_at_block_bottom` to not match false positive closing blocks (@jodosha in #17)
 
 
 [Compare v1.0.1...v1.0.2](https://github.com/dry-rb/dry-files/compare/v1.0.1...v1.0.2)
