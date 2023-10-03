@@ -1,4 +1,10 @@
 ---
+- version: 1.0.2
+  summary:
+  date: 2023-10-03
+  fixed:
+  - |-
+    Ensure Dry::Files#inject_line_at_block_bottom to not match false positive closing blocks (@jodosha in #17)
 - version: 1.0.1
   summary:
   date: 2022-11-21
