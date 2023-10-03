@@ -1369,6 +1369,59 @@ RSpec.describe Dry::Files do
       expect(path).to have_content(expected)
     end
 
+    it "injects line at the bottom of the Ruby block (ignoring false positive blocks)" do
+      path = root.join("inject_line_at_block_bottom_gemfile.rb")
+      content = <<~CONTENT
+        group :development do
+          gem "hanami-webconsole"
+        end
+
+        group :development, :test do
+          gem "dotenv"
+        end
+
+        group :cli, :development do
+          gem "hanami-reloader"
+        end
+
+        group :cli, :development, :test do
+          gem "hanami-rspec"
+        end
+
+        group :test do
+          gem "rack-test"
+        end
+      CONTENT
+
+      subject.write(path, content)
+      subject.inject_line_at_block_bottom(path, "group :development do", %(gem "guard-puma"))
+
+      expected = <<~CONTENT
+        group :development do
+          gem "hanami-webconsole"
+          gem "guard-puma"
+        end
+
+        group :development, :test do
+          gem "dotenv"
+        end
+
+        group :cli, :development do
+          gem "hanami-reloader"
+        end
+
+        group :cli, :development, :test do
+          gem "hanami-rspec"
+        end
+
+        group :test do
+          gem "rack-test"
+        end
+      CONTENT
+
+      expect(path).to have_content(expected)
+    end
+
     it "injects line at the bottom of the Ruby block (using a Regexp matcher)" do
       path = root.join("inject_line_regexp_at_block_bottom.rb")
       content = <<~CONTENT
