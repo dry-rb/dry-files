@@ -844,8 +844,8 @@ module Dry
       # @since 1.0.2
       # @api private
       SPACE_MATCHER_GENERAL = /[[:space:]]*/
-
       private_constant :SPACE_MATCHER_GENERAL
+
       # @since 0.3.0
       # @api private
       attr_reader :opening, :closing
