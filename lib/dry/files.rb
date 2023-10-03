@@ -841,6 +841,11 @@ module Dry
     # @since 0.3.0
     # @api private
     class Delimiter
+      # @since 1.0.2
+      # @api private
+      SPACE_MATCHER_GENERAL = /[[:space:]]*/
+
+      private_constant :SPACE_MATCHER_GENERAL
       # @since 0.3.0
       # @api private
       attr_reader :opening, :closing
@@ -852,6 +857,26 @@ module Dry
         @opening = opening
         @closing = closing
         freeze
+      end
+
+      # @since 1.0.2
+      # @api private
+      def opening_matcher
+        matcher(opening)
+      end
+
+      # @since 1.0.2
+      # @api private
+      def closing_matcher
+        matcher(closing)
+      end
+
+      private
+
+      # @since 1.0.2
+      # @api private
+      def matcher(delimiter)
+        /#{SPACE_MATCHER_GENERAL}\b#{delimiter}\b(?:#{SPACE_MATCHER_GENERAL}|#{NEW_LINE_MATCHER})/
       end
     end
 
@@ -967,9 +992,9 @@ module Dry
     # @since 0.3.0
     # @api private
     def closing_block_index(content, starting, path, target, delimiter, count_offset = 0) # rubocop:disable Metrics/ParameterLists
-      blocks_count = content.count { |line| line.match?(delimiter.opening) } + count_offset
+      blocks_count = content.count { |line| line.match?(delimiter.opening_matcher) } + count_offset
       matching_line = content.find do |line|
-        blocks_count -= 1 if line.match?(delimiter.closing)
+        blocks_count -= 1 if line.match?(delimiter.closing_matcher)
         line if blocks_count.zero?
       end
 
