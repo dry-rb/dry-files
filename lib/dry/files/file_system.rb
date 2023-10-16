@@ -131,6 +131,25 @@ module Dry
         end
       end
 
+      # Sets UNIX permissions of the file at the given path.
+      #
+      # Accepts permissions in numeric mode only, best provided as octal numbers matching the
+      # standard UNIX octal permission modes, such as `0o544` for a file writeable by its owner and
+      # readable by others, or `0o755` for a file writeable by its owner and executable by everyone.
+      #
+      # @param path [String,Pathname] the path to the file
+      # @param mode [Integer] the UNIX permissions mode
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
+      # @since @1.1.0
+      # @api private
+      def chmod(path, mode)
+        with_error_handling do
+          file_utils.chmod(mode, path)
+        end
+      end
+
       # Returns a new string formed by joining the strings using Operating
       # System path separator
       #
