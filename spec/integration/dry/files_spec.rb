@@ -144,7 +144,8 @@ RSpec.describe Dry::Files do
     it "raises an argument error when the permissions are given in non-numeric format" do
       path = root.join("permissions")
 
-      expect { subject.chmod(path, "+x") }.to raise_error ArgumentError, "file mode should be an integer"
+      expect { subject.chmod(path, "+x") }
+        .to raise_error Dry::Files::Error, "mode should be an integer (e.g. 0o755)"
     end
 
     it "raises an error when the path doesn't exist" do

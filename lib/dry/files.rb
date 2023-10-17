@@ -96,7 +96,7 @@ module Dry
     # @since @1.1.0
     # @api public
     def chmod(path, mode)
-      raise ArgumentError, "file mode should be an integer" unless mode.is_a?(Integer)
+      raise Dry::Files::Error, "mode should be an integer (e.g. 0o755)" unless mode.is_a?(Integer)
 
       adapter.chmod(path, mode)
     end
