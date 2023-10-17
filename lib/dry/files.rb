@@ -93,7 +93,7 @@ module Dry
     #
     # @raise [Dry::Files::IOError] in case of I/O error
     #
-    # @since @1.1.0
+    # @since 1.1.0
     # @api public
     def chmod(path, mode)
       raise Dry::Files::Error, "mode should be an integer (e.g. 0o755)" unless mode.is_a?(Integer)

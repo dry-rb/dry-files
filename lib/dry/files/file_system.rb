@@ -142,7 +142,7 @@ module Dry
       #
       # @raise [Dry::Files::IOError] in case of I/O error
       #
-      # @since @1.1.0
+      # @since 1.1.0
       # @api private
       def chmod(path, mode)
         with_error_handling do
