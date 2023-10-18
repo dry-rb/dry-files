@@ -1,4 +1,11 @@
 ---
+- version: 1.1.0
+  summary:
+  date: 2023-10-18
+  added:
+    - |-
+      Add `Dry::Files#chmod(path, mode)` to modify file permissions. Provide the mode as an integer
+      to match UNIX octal permissions, such as `0o755`. (@timriley in #18)
 - version: 1.0.2
   summary:
   date: 2023-10-03
