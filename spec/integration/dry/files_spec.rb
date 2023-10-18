@@ -124,6 +124,41 @@ RSpec.describe Dry::Files do
     end
   end
 
+  describe "#chmod" do
+    it "sets the given permissions" do
+      path = root.join("permissions")
+      subject.touch(path)
+      mode = path.stat.mode
+
+      begin
+        expect { subject.chmod(path, 0o755) }
+          .to change { path.executable? }.to true
+
+        expect { subject.chmod(path, 0o644) }
+          .to change { path.executable? }.to false
+      ensure
+        path.chmod(mode)
+      end
+    end
+
+    it "raises an argument error when the permissions are given in non-numeric format" do
+      path = root.join("permissions")
+
+      expect { subject.chmod(path, "+x") }
+        .to raise_error Dry::Files::Error, "mode should be an integer (e.g. 0o755)"
+    end
+
+    it "raises an error when the path doesn't exist" do
+      path = root.join("permissions-does-not-exist")
+
+      expect { subject.chmod(path, 0o755) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+  end
+
   describe "#cp" do
     let(:source) { root.join("..", "source") }
 
