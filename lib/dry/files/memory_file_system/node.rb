@@ -97,6 +97,10 @@ module Dry
         # @api private
         attr_reader :segment, :mode
 
+        # @since 1.0.1
+        # @api private
+        attr_reader :children
+
         # Instantiate a new node.
         # It's a directory node by default.
         #

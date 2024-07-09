@@ -855,6 +855,18 @@ module Dry
       remove_block(path, target) if match?(content, target)
     end
 
+    # Reads entries from a directory
+    #
+    # @param path [String,Pathname] the path to file
+    #
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 1.0.1
+    # @api public
+    def entries(path)
+      adapter.entries(path)
+    end
+
     private
 
     # @since 0.3.0
