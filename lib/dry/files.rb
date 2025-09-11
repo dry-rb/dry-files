@@ -901,7 +901,7 @@ module Dry
 
     # @since 0.1.0
     # @api private
-    NEW_LINE = $/ # rubocop:disable Style/SpecialGlobalVars
+    NEW_LINE = $/
     private_constant :NEW_LINE
 
     # @since 0.3.0

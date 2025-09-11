@@ -378,8 +378,8 @@ module Dry
       # @api private
       def with_error_handling
         yield
-      rescue SystemCallError => e
-        raise IOError, e
+      rescue SystemCallError => exception
+        raise IOError, exception
       end
     end
   end
