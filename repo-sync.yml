@@ -1,0 +1,14 @@
+name:
+  gem: dry-files
+  constant: Dry::Files
+github_org: dry-rb
+gemspec:
+  authors: ["Hanakai team"]
+  email: ["info@hanakai.org"]
+  summary: "file utilities"
+  homepage: "https://dry-rb.org/gems/dry-files"
+  required_ruby_version: ">= 3.1"
+  development_dependencies:
+    - bundler
+    - rake
+    - rspec
