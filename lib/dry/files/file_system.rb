@@ -17,6 +17,10 @@ module Dry
       # @api private
       attr_reader :file_utils
 
+      # @since 1.0.1
+      # @api private
+      attr_reader :dir
+
       # Creates a new instance
       #
       # @param file [Class]
@@ -25,9 +29,10 @@ module Dry
       # @return [Dry::Files::FileSystem]
       #
       # @since 0.1.0
-      def initialize(file: File, file_utils: FileUtils)
+      def initialize(file: File, file_utils: FileUtils, dir: Dir)
         @file = file
         @file_utils = file_utils
+        @dir = dir
       end
 
       # Opens (or creates) a new file for both read/write operations.
@@ -360,6 +365,22 @@ module Dry
       # @api private
       def executable?(path)
         file.executable?(path)
+      end
+
+      # Get entries from a directory
+      #
+      # @see https://ruby-doc.org/3.2.2/Dir.html#method-c-entries
+      #
+      # @param [String,Pathname] the path to list entries for
+      #
+      # @raise [Dry::Files::IOError] in case of I/O error
+      #
+      # @since 1.0.1
+      # @api private
+      def entries(path)
+        with_error_handling do
+          dir.entries(path)
+        end
       end
 
       private
