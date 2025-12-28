@@ -600,4 +600,29 @@ RSpec.describe Dry::Files::FileSystem do
       expect(subject.executable?(path)).to be(true)
     end
   end
+
+  describe "#entries" do
+    it "returns entries for directory" do
+      subject.touch(root.join("file-1.txt"))
+      subject.touch(root.join("file-2.txt"))
+
+      expect(subject.entries(root)).to eq [".", "..", "file-2.txt", "file-1.txt"]
+    end
+
+    it "returns an array with only relative paths on an empty directory" do
+      subject.mkdir(root.join("empty"))
+
+      expect(subject.entries(root.join("empty"))).to eq [".", ".."]
+    end
+
+    it "raises error if directory doesn't exist" do
+      path = root.join("non-existent")
+
+      expect { subject.entries(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+  end
 end
