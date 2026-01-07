@@ -1010,7 +1010,7 @@ module Dry
 
     # @since 0.3.0
     # @api private
-    def closing_block_index(content, starting, path, target, delimiter, count_offset = 0) # rubocop:disable Metrics/ParameterLists
+    def closing_block_index(content, starting, path, target, delimiter, count_offset = 0)
       blocks_count = content.count { |line| line.match?(delimiter.opening_matcher) } + count_offset
       matching_line = content.find do |line|
         blocks_count -= 1 if line.match?(delimiter.closing_matcher)
