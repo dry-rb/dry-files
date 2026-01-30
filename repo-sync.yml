@@ -2,6 +2,8 @@ name:
   gem: dry-files
   constant: Dry::Files
 github_org: dry-rb
+ci:
+  jruby: false
 gemspec:
   authors: ["Hanakai team"]
   email: ["info@hanakai.org"]
