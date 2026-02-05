@@ -426,7 +426,7 @@ RSpec.describe Dry::Files do
         end
 
         with_ruby_engine(:jruby) do
-          expect(exception.cause).to be_kind_of(Errno::EPERM)
+          expect(exception.cause).to be_kind_of(Errno::EISDIR)
         end
 
         expect(exception.message).to include(path.to_s)
