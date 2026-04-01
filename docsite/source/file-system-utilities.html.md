@@ -69,4 +69,7 @@ files.directory?(path)
 
 # check if path is an executable (files and directories)
 files.executable?(path)
+
+# read entries from a directory
+files.entries(path)
 ```
