@@ -1968,4 +1968,18 @@ RSpec.describe Dry::Files do
       expect(subject.executable?(path)).to be(true)
     end
   end
+
+  describe "#entries" do
+    it "returns a list of entries for a directory" do
+      subject.touch(root.join("file-1.txt"))
+      subject.touch(root.join("file-2.txt"))
+
+      expect(subject.entries(root)).to eq [
+        ".",
+        "..",
+        "file-2.txt",
+        "file-1.txt"
+      ]
+    end
+  end
 end
