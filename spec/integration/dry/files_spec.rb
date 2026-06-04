@@ -79,6 +79,36 @@ RSpec.describe Dry::Files do
     end
   end
 
+  describe "#readlines" do
+    it "reads file into an array" do
+      path = root.join("readlines")
+      subject.write(path, "Hello#{newline}World")
+
+      expect(subject.readlines(path)).to eq(["Hello#{newline}", "World"])
+    end
+
+    it "raises error when path is a directory" do
+      path = root.join("readlines-directory")
+      path.mkpath
+
+      expect { subject.readlines(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::EISDIR)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+
+    it "raises error when path doesn't exist" do
+      path = root.join("readlines-does-not-exist")
+
+      expect { subject.readlines(path) }.to raise_error do |exception|
+        expect(exception).to be_kind_of(Dry::Files::IOError)
+        expect(exception.cause).to be_kind_of(Errno::ENOENT)
+        expect(exception.message).to include(path.to_s)
+      end
+    end
+  end
+
   describe "#write" do
     it "creates an file with given contents" do
       path = root.join("write")
