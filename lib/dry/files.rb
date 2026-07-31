@@ -53,6 +53,20 @@ module Dry
       adapter.read(path)
     end
 
+    # Read file content into an array of lines
+    #
+    # @param path [String,Pathname] the path to file
+    #
+    # @return [Array] the lines of the file
+    #
+    # @raise [Dry::Files::IOError] in case of I/O error
+    #
+    # @since 1.2.0
+    # @api public
+    def readlines(path)
+      adapter.readlines(path)
+    end
+
     # Creates an empty file for the given path.
     # All the intermediate directories are created.
     # If the path already exists, it doesn't change the contents
