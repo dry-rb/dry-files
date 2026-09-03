@@ -975,8 +975,7 @@ module Dry
 
     # @since 0.3.0
     # @api private
-    INLINE_BLOCK_DELIMITER = Delimiter.new("InlineBlockDelimiter",
-                                           INLINE_OPEN_BLOCK, INLINE_CLOSE_BLOCK)
+    INLINE_BLOCK_DELIMITER = Delimiter.new("InlineBlockDelimiter", INLINE_OPEN_BLOCK, INLINE_CLOSE_BLOCK)
     private_constant :INLINE_BLOCK_DELIMITER
 
     # @since 0.3.0
