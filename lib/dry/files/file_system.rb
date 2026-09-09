@@ -125,9 +125,14 @@ module Dry
       # @api private
       def write(path, *content)
         mkdir_p(path)
+        content = Array(content).flatten
 
         self.open(path, WRITE_MODE) do |f|
-          f.write(Array(content).flatten.join)
+          if content.any? { |c| c.encoding == Encoding::BINARY || !c.valid_encoding? }
+            f.binmode
+          end
+
+          f.write(content.join)
         end
       end
 

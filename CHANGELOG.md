@@ -7,6 +7,9 @@ and this project adheres to [Break Versioning](https://www.taoensso.com/break-ve
 
 ## [Unreleased]
 
+### Fixed
+
+- Detect binary content when writing to filesystem and handle a binary file write
 
 ## [1.1.0] - 2023-10-18
 

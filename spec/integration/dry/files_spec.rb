@@ -152,6 +152,36 @@ RSpec.describe Dry::Files do
         path.chmod(mode)
       end
     end
+
+    it "writes binary content without raising an encoding error" do
+      path = root.join("binary.png")
+      binary_content = "\x89PNG\r\n\x1a\n".b.force_encoding(Encoding::BINARY)
+
+      original_default_internal = Encoding.default_internal
+      begin
+        Encoding.default_internal = Encoding::UTF_8
+
+        expect { subject.write(path, binary_content) }.not_to raise_error
+        expect(File.binread(path)).to eq(binary_content)
+      ensure
+        Encoding.default_internal = original_default_internal
+      end
+    end
+
+    it "writes content with invalid encoding as binary without raising an encoding error" do
+      path = root.join("binary.png")
+      binary_content = "\x89PNG\r\n\x1a\n"
+
+      original_default_internal = Encoding.default_internal
+      begin
+        Encoding.default_internal = Encoding::UTF_8
+
+        expect { subject.write(path, binary_content) }.not_to raise_error
+        expect(File.binread(path).force_encoding(Encoding::UTF_8)).to eq(binary_content)
+      ensure
+        Encoding.default_internal = original_default_internal
+      end
+    end
   end
 
   describe "#chmod" do
