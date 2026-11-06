@@ -10,6 +10,7 @@ and this project adheres to [Break Versioning](https://www.taoensso.com/break-ve
 ### Fixed
 
 - Detect binary content when writing to filesystem and handle a binary file write
+- Ensure `Dry::Files#inject_line_at_class_bottom` injects before the class's own `end`, rather than the `end` of the first method, inner class, or module inside it (@parndt in #25)
 
 ## [1.1.0] - 2023-10-18
 
