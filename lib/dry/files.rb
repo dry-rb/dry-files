@@ -1037,6 +1037,12 @@ module Dry
     # @since 0.4.0
     # @api private
     def closing_class_index(content, starting, path, target, delimiter)
+      # The class's own `end` is the first line back at the class's indentation. This also skips the
+      # `end` of every method, inner class, and module, which counting `do` blocks can't tell apart.
+      closing = /\A#{Regexp.escape(content.first[SPACE_MATCHER])}#{CLOSE_BLOCK}\b/
+      ending = content.index { |line| line.match?(closing) }
+      return ending + starting if ending
+
       closing_block_index(content, starting, path, target, delimiter, 1)
     end
 
