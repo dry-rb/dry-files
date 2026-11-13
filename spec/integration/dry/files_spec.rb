@@ -1913,7 +1913,40 @@ RSpec.describe Dry::Files do
       expect(path).to have_content(expected)
     end
 
-    xit "injects line at the bottom of the class with inner classes and modules" do
+    it "injects line at the bottom of the class with methods" do
+      path = root.join("inject_line_at_class_with_methods_bottom.rb")
+      content = <<~CONTENT
+        module Foo
+          class Bar
+            def baz
+              if qux
+                :qux
+              end
+            end
+          end
+        end
+      CONTENT
+
+      subject.write(path, content)
+      subject.inject_line_at_class_bottom(path, "Bar", "attr_accessor :foo")
+
+      expected = <<~CONTENT
+        module Foo
+          class Bar
+            def baz
+              if qux
+                :qux
+              end
+            end
+            attr_accessor :foo
+          end
+        end
+      CONTENT
+
+      expect(path).to have_content(expected)
+    end
+
+    it "injects line at the bottom of the class with inner classes and modules" do
       path = root.join("inject_line_at_class_bottom.rb")
       content = <<~CONTENT
         class InjectLineClassWithInnerClassesBottom
