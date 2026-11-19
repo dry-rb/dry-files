@@ -2,77 +2,87 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Break Versioning](https://www.taoensso.com/break-versioning).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Break Versioning](https://www.taoensso.com/break-versioning).
 
 ## [Unreleased]
 
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
 ### Fixed
 
-- Detect binary content when writing to filesystem and handle a binary file write
-- Ensure `Dry::Files#inject_line_at_class_bottom` injects before the class's own `end`, rather than the `end` of the first method, inner class, or module inside it (@parndt in #25)
+### Security
+
+[Unreleased]: https://github.com/dry-rb/dry-files/compare/v1.2.0...main
+
+## [1.2.0] - 2026-11-19
+
+### Added
+
+- Add `Dry::Files#readlines`. (@sandbergja in #23)
+
+### Fixed
+
+- Detect binary content when writing to filesystem and handle a binary file write. (@katafrakt in #24)
+- Ensure `Dry::Files#inject_line_at_class_bottom` injects before the class's own `end`, rather than the `end` of the first method, inner class, or module inside it. (@parndt in #25)
+
+[1.2.0]: https://github.com/dry-rb/dry-files/compare/v1.1.0...v1.2.0
 
 ## [1.1.0] - 2023-10-18
-
 
 ### Added
 
 - Add `Dry::Files#chmod(path, mode)` to modify file permissions. Provide the mode as an integer
 to match UNIX octal permissions, such as `0o755`. (@timriley in #18)
 
-
-[Compare v1.0.2...v1.1.0](https://github.com/dry-rb/dry-files/compare/v1.0.2...v1.1.0)
+[1.1.0]: https://github.com/dry-rb/dry-files/compare/v1.0.2...v1.1.0
 
 ## [1.0.2] - 2023-10-03
-
 
 ### Fixed
 
 - Ensure `Dry::Files#inject_line_at_block_bottom` to not match false positive closing blocks (@jodosha in #17)
 
-
-[Compare v1.0.1...v1.0.2](https://github.com/dry-rb/dry-files/compare/v1.0.1...v1.0.2)
+[1.0.2]: https://github.com/dry-rb/dry-files/compare/v1.0.1...v1.0.2
 
 ## [1.0.1] - 2022-11-21
-
 
 ### Fixed
 
 - Do not introduce multiple newlines in `Dry::Files#append` (@timriley in #14)
 
-
-[Compare v1.0.0...v1.0.1](https://github.com/dry-rb/dry-files/compare/v1.0.0...v1.0.1)
+[1.0.1]: https://github.com/dry-rb/dry-files/compare/v1.0.0...v1.0.1
 
 ## [1.0.0] - 2022-11-04
-
 
 ### Changed
 
 - Bumped version to 1.0.0 (@solnic)
 
-[Compare v0.3.0...v1.0.0](https://github.com/dry-rb/dry-files/compare/v0.3.0...v1.0.0)
+[1.0.0]: https://github.com/dry-rb/dry-files/compare/v0.3.0...v1.0.0
 
 ## [0.3.0] - 2022-09-19
-
 
 ### Added
 
 - Support for `inject_line_at_class_bottom` (via #13) (@jodosha)
 
-
-[Compare v0.2.0...v0.3.0](https://github.com/dry-rb/dry-files/compare/v0.2.0...v0.3.0)
+[0.3.0]: https://github.com/dry-rb/dry-files/compare/v0.2.0...v0.3.0
 
 ## [0.2.0] - 2022-07-10
-
 
 ### Added
 
 - Dry::Files#append to create intermediate directory and touch destination file (via #8) (@jodosha)
 
+[0.2.0]: https://github.com/dry-rb/dry-files/compare/v0.1.0...v0.2.0
 
-[Compare v0.1.0...v0.2.0](https://github.com/dry-rb/dry-files/compare/v0.1.0...v0.2.0)
-
-## [0.1.0] - 2021-05-04
+## 0.1.0 - 2021-05-04
 
 Initial release
 
